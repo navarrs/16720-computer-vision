@@ -16,10 +16,10 @@ def main():
     ## Q1.1
     #img_path = join(opts.data_dir, 'gry.jpg')
     img_path = join(opts.data_dir, 'kitchen/sun_aasmevtpkslccptd.jpg')
+    #img_path = join(opts.data_dir, 'aquarium/sun_aztvjgubyrgvirup.jpg')
     img = Image.open(img_path)
     img = np.array(img).astype(np.float32)/255
     filter_responses = visual_words.extract_filter_responses(opts, img)
-    print(filter_responses.shape)
     util.display_filter_responses(opts, filter_responses)
 
     ## Q1.2
