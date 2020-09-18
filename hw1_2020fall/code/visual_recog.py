@@ -21,8 +21,7 @@ def get_feature_from_wordmap(opts, wordmap):
     '''
 
     K = opts.K
-    # ----- TODO -----
-    pass
+    return np.histogram(wordmap, bins=K)
 
 def get_feature_from_wordmap_SPM(opts, wordmap):
     '''

@@ -35,7 +35,7 @@ def visualize_wordmap(wordmap, out_path=None):
     plt.figure(2)
     plt.axis('equal')
     plt.axis('off')
-    plt.imshow(wordmap)
+    plt.imshow(wordmap, cmap=plt.get_cmap('Paired'))
     plt.show()
     if out_path:
         plt.savefig(out_path, pad_inches=0)

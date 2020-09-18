@@ -167,5 +167,5 @@ def get_visual_words(opts, img, dictionary):
     for j in range(img.shape[1]):
       dist = scipy.spatial.distance.cdist(response[i, j].reshape(1, 48), 
                                           dictionary, metric='euclidean')
-      wordmap[i, j] = np.amin(dist) / 255
+      wordmap[i, j] = np.argmin(dist)
   return wordmap   
