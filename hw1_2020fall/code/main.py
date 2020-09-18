@@ -24,15 +24,15 @@ def main():
 
     ## Q1.2
     n_cpu = util.get_num_CPU()
-    visual_words.compute_dictionary(opts, n_worker=n_cpu)
+    #visual_words.compute_dictionary(opts, n_worker=n_cpu)
     
     ## Q1.3
-    # img_path = join(opts.data_dir, 'kitchen/sun_aasmevtpkslccptd.jpg')
-    # img = Image.open(img_path)
-    # img = np.array(img).astype(np.float32)/255
-    # dictionary = np.load(join(opts.out_dir, 'dictionary.npy'))
-    # wordmap = visual_words.get_visual_words(opts, img, dictionary)
-    # util.visualize_wordmap(wordmap)
+    img_path = join(opts.data_dir, 'kitchen/sun_aadolwejqiytvyne.jpg')
+    img = Image.open(img_path)
+    img = np.array(img).astype(np.float32)/255
+    dictionary = np.load(join(opts.out_dir, 'dictionary.npy'))
+    wordmap = visual_words.get_visual_words(opts, img, dictionary)
+    util.visualize_wordmap(wordmap)
 
     ## Q2.1-2.4
     # n_cpu = util.get_num_CPU()

@@ -151,7 +151,7 @@ def compute_dictionary(opts, n_worker=1):
 
 
 def get_visual_words(opts, img, dictionary):
-    '''
+  '''
     Compute visual words mapping for the given img using the dictionary of visual words.
 
     [input]
@@ -160,7 +160,12 @@ def get_visual_words(opts, img, dictionary):
 
     [output]
     * wordmap: numpy.ndarray of shape (H,W)
-    '''
-
-    # ----- TODO -----
-    pass
+  '''
+  wordmap = np.zeros((img.shape[0], img.shape[1]), dtype=float)
+  response = extract_filter_responses(opts, img)
+  for i in range(img.shape[0]):
+    for j in range(img.shape[1]):
+      dist = scipy.spatial.distance.cdist(response[i, j].reshape(1, 48), 
+                                          dictionary, metric='euclidean')
+      wordmap[i, j] = np.amin(dist) / 255
+  return wordmap   
