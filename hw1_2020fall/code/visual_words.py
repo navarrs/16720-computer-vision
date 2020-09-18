@@ -1,13 +1,14 @@
 import os
 import multiprocessing
 from os.path import join, isfile
-
+import glob
 import numpy as np
 from PIL import Image
 import scipy.ndimage
 import scipy.signal
 import skimage.color
 from enum import Enum
+from sklearn.cluster import KMeans
 
 class Filter(Enum):
   """ 
@@ -75,6 +76,7 @@ def extract_filter_responses(opts, img):
   filter_responses = np.ones(
     (img.shape[0], img.shape[1], len(Filter) * len(filter_scales) * img.shape[2]))
   
+  # Compute responses
   i = 0
   for fscale in filter_scales:
     for ftype in Filter:
@@ -85,20 +87,29 @@ def extract_filter_responses(opts, img):
   return filter_responses
 
 
-def compute_dictionary_one_image(args):
-    '''
+def compute_dictionary_one_image(opts, img_path):
+  '''
     Extracts a random subset of filter responses of an image and save it to disk
     This is a worker function called by compute_dictionary
 
     Your are free to make your own interface based on how you implement compute_dictionary
-    '''
-
-    # ----- TODO -----
-    pass
-
-
+  '''
+  # Load image 
+  img = Image.open(join(opts.data_dir, img_path))
+  img = np.array(img).astype(np.float32)/255
+  filter_responses = extract_filter_responses(opts, img)
+  
+  # Sample pixel locations 
+  sub_response = np.zeros((opts.alpha, filter_responses.shape[2]))
+  for a in range(opts.alpha):
+    # Sample a location in the image 
+    r = np.random.randint(low=0, high=img.shape[0])
+    c = np.random.randint(low=0, high=img.shape[1])
+    sub_response[a] = filter_responses[r, c, :]
+  np.save(join(opts.data_dir, img_path.split(".jpg")[0])+".npy", sub_response)
+  
 def compute_dictionary(opts, n_worker=1):
-    '''
+  '''
     Creates the dictionary of visual words by clustering using k-means.
 
     [input]
@@ -107,19 +118,36 @@ def compute_dictionary(opts, n_worker=1):
 
     [saved]
     * dictionary : numpy.ndarray of shape (K,3F)
-    '''
-
-    data_dir = opts.data_dir
-    feat_dir = opts.feat_dir
-    out_dir = opts.out_dir
-    K = opts.K
-
-    train_files = open(join(data_dir, 'train_files.txt')).read().splitlines()
-    # ----- TODO -----
-    pass
-
-    # example code snippet to save the dictionary
-    # np.save(join(out_dir, 'dictionary.npy'), dictionary)
+  '''
+  data_dir = opts.data_dir
+  feat_dir = opts.feat_dir
+  out_dir = opts.out_dir
+  K = opts.K
+  alpha = opts.alpha
+  train_files = open(join(data_dir, 'train_files.txt')).read().splitlines()
+  
+  # Go through all training images 
+  # pool = multiprocessing.Pool(n_worker)
+  # for tfile in train_files:
+  #   # Create dictionary for image in tfile
+  #   pool.apply_async(compute_dictionary_one_image, [opts, tfile])
+  #   # compute_dictionary_one_image(opts, tfile)
+  # pool.close()
+  # pool.join()
+  
+  # Collect all responses back 
+  responses = np.zeros((alpha * len(train_files), 4 * 3 * len(opts.filter_scales)))
+  responses_files = glob.glob(data_dir + "/**/*.npy", recursive=True)
+  i = 0
+  for rfile in responses_files:
+    with open(rfile, "rb") as f:
+      responses[i:i+alpha, :] = np.load(f)
+    i += alpha
+    
+  # Run k-means 
+  kmeans = KMeans(n_clusters=K).fit(responses)
+  dictionary = kmeans.cluster_centers_
+  np.save(join(out_dir, 'dictionary.npy'), dictionary)
 
 
 def get_visual_words(opts, img, dictionary):
