@@ -3,6 +3,7 @@ from os.path import join
 from copy import copy
 
 import numpy as np
+import math
 from PIL import Image
 
 import visual_words
@@ -19,9 +20,9 @@ def get_feature_from_wordmap(opts, wordmap):
     [output]
     * hist: numpy.ndarray of shape (K)
     '''
-
     K = opts.K
-    return np.histogram(wordmap, bins=K)
+    hist, _ = np.histogram(wordmap, bins=K)
+    return hist / np.sum(hist)
 
 def get_feature_from_wordmap_SPM(opts, wordmap):
     '''
@@ -34,11 +35,40 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
     [output]
     * hist_all: numpy.ndarray of shape (K*(4^L-1)/3)
     '''
-        
     K = opts.K
     L = opts.L
-    # ----- TODO -----
-    pass
+    
+    hist_all = np.zeros((int(K*(4 ** L-1)/3)), dtype=float)
+    
+    # Get histograms of the finest layer
+    i = 0
+    y_cell = math.ceil(wordmap.shape[0] / (2 ** (L-1)))
+    x_cell = math.ceil(wordmap.shape[1] / (2 ** (L-1)))
+    for y in range(0, wordmap.shape[0], y_cell):
+        max_y = wordmap.shape[0] if y > wordmap.shape[0] else y + y_cell
+        for x in range(0, wordmap.shape[1], x_cell):
+            max_x = wordmap.shape[1] if x > wordmap.shape[1] else x + x_cell
+            hist = get_feature_from_wordmap(opts, wordmap[y:max_y, x:max_x])
+            print(hist)
+            hist_all[i:i+K] = hist
+            i += K
+
+    # Add up from finest to largest
+    j = i
+    for l in reversed(range(L-1)):
+        num_cells = 2**l * 2**l
+        mod = 4 * (L-1-l)
+        for c in range(num_cells):
+            for sub_c in range(4):
+                start_i = ((i//K) % mod) * K
+                print(f"mod {mod} start {start_i}")     
+                hist_all[j:j+K] += hist_all[start_i:start_i+K]
+                i += K
+            hist_all[j:j+K] /= np.sum(hist_all[j:j+K])
+            j += K
+    
+    return 0
+    
     
 def get_image_feature(opts, img_path, dictionary):
     '''
