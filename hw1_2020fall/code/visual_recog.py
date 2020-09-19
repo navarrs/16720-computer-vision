@@ -110,9 +110,10 @@ def get_image_feature(opts, img_path, dictionary):
     [output]
     * feature: numpy.ndarray of shape (K)
     '''
-
-    # ----- TODO -----
-    pass
+    img = Image.open(img_path)
+    img = np.array(img).astype(np.float32)/255
+    wordmap = visual_words.get_visual_words(opts, img, dictionary)
+    return get_feature_from_wordmap_SPM(opts, wordmap)
 
 def build_recognition_system(opts, n_worker=1):
     '''
