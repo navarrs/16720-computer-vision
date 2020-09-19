@@ -31,7 +31,7 @@ def get_opts():
                         help='Using only a subset of alpha pixels in each image') 
 
     ## Recognition system (requires tuning)
-    parser.add_argument('--L', type=int, default=3,
+    parser.add_argument('--L', type=int, default=1,
                         help='# of layers in spatial pyramid matching (SPM)')
 
     ## Additional options (add your own hyperparameters here)

@@ -117,7 +117,8 @@ def get_image_feature(opts, img_path, dictionary):
 
 def build_recognition_system(opts, n_worker=1):
     '''
-    Creates a trained recognition system by generating training features from all training images.
+    Creates a trained recognition system by generating training features from 
+    all training images.
 
     [input]
     * opts        : options
@@ -133,21 +134,38 @@ def build_recognition_system(opts, n_worker=1):
     data_dir = opts.data_dir
     out_dir = opts.out_dir
     SPM_layer_num = opts.L
+    K = opts.K
 
     train_files = open(join(data_dir, 'train_files.txt')).read().splitlines()
     train_labels = np.loadtxt(join(data_dir, 'train_labels.txt'), np.int32)
     dictionary = np.load(join(out_dir, 'dictionary.npy'))
-
-    # ----- TODO -----
-    pass
-
+    N = len(train_labels)
+    
+    features = np.zeros((N, int(K*(4 ** SPM_layer_num-1)/3)), dtype=float)
+    
+    # Go through all training images 
+    # pool = multiprocessing.Pool(n_worker)
+    # for tfile in train_files:
+    #   # Create dictionary for image in tfile
+    #   pool.apply_async(compute_dictionary_one_image, [opts, tfile])
+    #   # compute_dictionary_one_image(opts, tfile)
+    # pool.close()
+    # pool.join()
+    # pool = multiprocessing.Pool(n_worker)
+    # features = pool.map(get_image_feature, [])
+    
+    for i in range(N):
+        print(f"{i} of {N} progress {i*100/N}")
+        features[i] = get_image_feature(opts, join(data_dir, train_files[i]), 
+                                        dictionary)
+        
     ## example code snippet to save the learned system
-    # np.savez_compressed(join(out_dir, 'trained_system.npz'),
-    #     features=features,
-    #     labels=train_labels,
-    #     dictionary=dictionary,
-    #     SPM_layer_num=SPM_layer_num,
-    # )
+    np.savez_compressed(join(out_dir, 'trained_system.npz'),
+        features=features,
+        labels=train_labels,
+        dictionary=dictionary,
+        SPM_layer_num=SPM_layer_num,
+    )
 
 def distance_to_set(word_hist, histograms):
     '''

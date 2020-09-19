@@ -40,8 +40,8 @@ def main():
     # hist = visual_recog.get_image_feature(opts, img_path, dictionary)
     # print(hist, np.sum(hist))
     
-    # n_cpu = util.get_num_CPU()
-    # visual_recog.build_recognition_system(opts, n_worker=n_cpu)
+    n_cpu = util.get_num_CPU()
+    visual_recog.build_recognition_system(opts, n_worker=n_cpu)
 
     ## Q2.5
     # n_cpu = util.get_num_CPU()
