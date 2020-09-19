@@ -26,6 +26,11 @@ def get_feature_from_wordmap(opts, wordmap, norm=True):
         return hist / np.sum(hist)
     else:
         return hist
+    
+def compute_weight(l, L):
+    if l == 0 or l == 1:
+        return 2 ** (-L)
+    return 2 ** (l - L - 1)
 
 def get_feature_from_wordmap_SPM(opts, wordmap):
     '''
@@ -40,7 +45,6 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
     '''
     K = opts.K
     L = opts.L
-    
     hist_all = np.zeros((int(K*(4 ** L-1)/3)), dtype=float)
     
     # Get histograms of the finest layer
@@ -51,61 +55,46 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
         max_y = wordmap.shape[0] if y > wordmap.shape[0] else y + y_cell
         for x in range(0, wordmap.shape[1], x_cell):
             max_x = wordmap.shape[1] if x > wordmap.shape[1] else x + x_cell
-            hist = get_feature_from_wordmap(opts, wordmap[y:max_y, x:max_x], False)
-            hist_all[i:i+K] = hist
+            # Get histogram here
+            hist_all[i:i+K] = get_feature_from_wordmap(opts, 
+                                                       wordmap[y:max_y, x:max_x], 
+                                                       False)
             i += K
     # Normalize the layer 
     hist_all[:i] /= np.sum(hist_all[:i])
 
-    # Add up from finest to largest
+    # Get histograms of remaining layers
     j = i
     k = 0
+    n_cells_1d_prev = 2**(L-1)
     for l in reversed(range(L-1)):
-        print(f"layer {l}")
-        nc = 2**(l+1)
-        n = 2**l
-        num_cells = 2**l * 2**l
-        for c in range(num_cells):
-            k_ = k + 2*K
-            print(f"Cell {c} gets {k}-{k + 2*K} and {k_ + (nc-2)*K}-{k_ + nc*K}")
-            hist_all[j:j+K]  =  hist_all[k:k + K]
-            hist_all[j:j+K] +=  hist_all[k+K:k_]
-            hist_all[j:j+K] +=  hist_all[k_ + (nc-2)*K:k_ + (nc-2)*K+K]
-            hist_all[j:j+K] +=  hist_all[k_ + (nc-2)*K+K:k_ + nc*K]
-        
-            if (c+1) % n == 0:
-                k = int(k_ + 4 * K * n / 2)
+        n_cells_1d = 2**l
+        for c in range(n_cells_1d * n_cells_1d):
+            k1 = k + 2*K
+            k2 = k + n_cells_1d_prev*K
+            hist_all[j:j+K]  =  hist_all[k:k+K]
+            hist_all[j:j+K] +=  hist_all[k+K:k1]
+            hist_all[j:j+K] +=  hist_all[k2:k2+K]
+            hist_all[j:j+K] +=  hist_all[k2+K:k1+n_cells_1d_prev*K]
+            if (c+1) % n_cells_1d == 0:
+                k = int(k1 + 4 * K * n_cells_1d / 2)
             else:
-                k = int(k_)
+                k = int(k1)
             j+=K
-    print(hist_all, np.sum(hist_all))   
-    # k = 0
-    # for l in reversed(range(L-1)):
-    #     num_cells = 2**l * 2**l
-    #     print(f"Layer {l}")
-    #     for c in range(num_cells):
-    #         k_max = k + 4 * K
-    #         print(f"Cell {c} gets from {k} to {k_max} into j {j}")
-    #         hist_all[j:j+K] = np.sum(hist_all[k:k_max])
-    #         k = k_max
-    #         j += K
-    # print(np.sum(hist_all))
-            
-    # j = i
-    # for l in reversed(range(L-1)):
-    #     num_cells = 2**l * 2**l
-    #     mod = 4 * (L-1-l)
-    #     for c in range(num_cells):
-    #         for sub_c in range(4):
-    #             start_i = ((i//K) % mod) * K
-    #             print(f"mod {mod} start {start_i}")     
-    #             hist_all[j:j+K] += hist_all[start_i:start_i+K]
-    #             i += K
-    #         hist_all[j:j+K] /= np.sum(hist_all[j:j+K])
-    #         j += K
-    #print(hist_all, np.sum(hist_all))
+        n_cells_1d_prev = n_cells_1d
     
-    return 0
+    # Weight layers
+    j = i
+    # print(f"Layer {L-1} w {compute_weight(L-1, L-1)} range {0}-{K*4**(L-1)}")       
+    for l in reversed(range(L-1)):
+        num_cells = 2**l * 2**l
+        hist_all[j:j+num_cells*K] *= compute_weight(l, L-1)
+        # print(f"Layer {l} w {compute_weight(l, L-1)} range {j}-{j+num_cells*K}")
+        j += num_cells*K
+    hist_all[:4**(L-1)*K] *= compute_weight(L-1, L-1)
+    
+    # print(np.sum(hist_all), compute_weight(L-1, L-1))
+    return hist_all
     
     
 def get_image_feature(opts, img_path, dictionary):
