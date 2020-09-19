@@ -9,7 +9,7 @@ from PIL import Image
 import visual_words
 
 
-def get_feature_from_wordmap(opts, wordmap):
+def get_feature_from_wordmap(opts, wordmap, norm=True):
     '''
     Compute histogram of visual words.
 
@@ -22,7 +22,10 @@ def get_feature_from_wordmap(opts, wordmap):
     '''
     K = opts.K
     hist, _ = np.histogram(wordmap, bins=K)
-    return hist / np.sum(hist)
+    if norm:
+        return hist / np.sum(hist)
+    else:
+        return hist
 
 def get_feature_from_wordmap_SPM(opts, wordmap):
     '''
@@ -48,24 +51,59 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
         max_y = wordmap.shape[0] if y > wordmap.shape[0] else y + y_cell
         for x in range(0, wordmap.shape[1], x_cell):
             max_x = wordmap.shape[1] if x > wordmap.shape[1] else x + x_cell
-            hist = get_feature_from_wordmap(opts, wordmap[y:max_y, x:max_x])
-            print(hist)
+            hist = get_feature_from_wordmap(opts, wordmap[y:max_y, x:max_x], False)
             hist_all[i:i+K] = hist
             i += K
+    # Normalize the layer 
+    hist_all[:i] /= np.sum(hist_all[:i])
 
     # Add up from finest to largest
     j = i
+    k = 0
     for l in reversed(range(L-1)):
+        print(f"layer {l}")
+        nc = 2**(l+1)
+        n = 2**l
         num_cells = 2**l * 2**l
-        mod = 4 * (L-1-l)
         for c in range(num_cells):
-            for sub_c in range(4):
-                start_i = ((i//K) % mod) * K
-                print(f"mod {mod} start {start_i}")     
-                hist_all[j:j+K] += hist_all[start_i:start_i+K]
-                i += K
-            hist_all[j:j+K] /= np.sum(hist_all[j:j+K])
-            j += K
+            k_ = k + 2*K
+            print(f"Cell {c} gets {k}-{k + 2*K} and {k_ + (nc-2)*K}-{k_ + nc*K}")
+            hist_all[j:j+K]  =  hist_all[k:k + K]
+            hist_all[j:j+K] +=  hist_all[k+K:k_]
+            hist_all[j:j+K] +=  hist_all[k_ + (nc-2)*K:k_ + (nc-2)*K+K]
+            hist_all[j:j+K] +=  hist_all[k_ + (nc-2)*K+K:k_ + nc*K]
+        
+            if (c+1) % n == 0:
+                k = int(k_ + 4 * K * n / 2)
+            else:
+                k = int(k_)
+            j+=K
+    print(hist_all, np.sum(hist_all))   
+    # k = 0
+    # for l in reversed(range(L-1)):
+    #     num_cells = 2**l * 2**l
+    #     print(f"Layer {l}")
+    #     for c in range(num_cells):
+    #         k_max = k + 4 * K
+    #         print(f"Cell {c} gets from {k} to {k_max} into j {j}")
+    #         hist_all[j:j+K] = np.sum(hist_all[k:k_max])
+    #         k = k_max
+    #         j += K
+    # print(np.sum(hist_all))
+            
+    # j = i
+    # for l in reversed(range(L-1)):
+    #     num_cells = 2**l * 2**l
+    #     mod = 4 * (L-1-l)
+    #     for c in range(num_cells):
+    #         for sub_c in range(4):
+    #             start_i = ((i//K) % mod) * K
+    #             print(f"mod {mod} start {start_i}")     
+    #             hist_all[j:j+K] += hist_all[start_i:start_i+K]
+    #             i += K
+    #         hist_all[j:j+K] /= np.sum(hist_all[j:j+K])
+    #         j += K
+    #print(hist_all, np.sum(hist_all))
     
     return 0
     
