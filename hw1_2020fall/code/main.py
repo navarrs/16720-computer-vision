@@ -37,7 +37,7 @@ def main():
     ## Q2.1-2.4
     # hist = visual_recog.get_feature_from_wordmap(opts, wordmap)
     # print(hist, np.sum(hist))
-    hist_all = visual_recog.get_feature_from_wordmap_SPM(opts, wordmap)
+    # hist_all = visual_recog.get_feature_from_wordmap_SPM(opts, wordmap)
     # n_cpu = util.get_num_CPU()
     # visual_recog.build_recognition_system(opts, n_worker=n_cpu)
 

@@ -159,9 +159,10 @@ def distance_to_set(word_hist, histograms):
     [output]
     * sim: numpy.ndarray of shape (N)
     '''
-
-    # ----- TODO -----
-    pass    
+    sim = np.zero(histograms.shape[0])
+    for i in range(histograms.shape[0]):
+        sim[i] = 1 - np.sum(np.minimum(word_hist, histograms[i]))
+    return sim    
     
 def evaluate_recognition_system(opts, n_worker=1):
     '''
