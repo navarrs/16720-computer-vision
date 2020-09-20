@@ -9,6 +9,7 @@ import scipy.signal
 import skimage.color
 from enum import Enum
 from sklearn.cluster import KMeans
+from itertools import repeat
 
 class Filter(Enum):
   """ 
@@ -31,15 +32,15 @@ def get_response(img, ftype, scale):
     --------
       * response of the same size as img 
   """
-  if ftype == Filter.GAUSSIAN:
+  if Filter.GAUSSIAN == ftype:
     return scipy.ndimage.gaussian_filter(img, scale, order=0, mode='reflect')
-  elif ftype == Filter.LOG:
+  elif Filter.LOG == ftype:
     return scipy.ndimage.gaussian_laplace(img, scale, mode='reflect')
-  elif ftype == Filter.DOG_X:
+  elif Filter.DOG_X == ftype:
     r1 = scipy.ndimage.gaussian_filter1d(img, scale, axis=1)
     r2 = scipy.ndimage.gaussian_filter1d(img, 2*scale, axis=1)
     return r2 - r1
-  elif ftype == Filter.DOG_Y:
+  elif Filter.DOG_Y == ftype:
     r1 = scipy.ndimage.gaussian_filter1d(img, scale, axis=0)
     r2 = scipy.ndimage.gaussian_filter1d(img, 2*scale, axis=0)
     return r2 - r1
@@ -55,11 +56,9 @@ def extract_filter_responses(opts, img):
     * filter_responses: numpy.ndarray of shape (H,W,3F)
   '''
   # Check if the image is floating point type and in range [0, 1]
-  # Solve this later
   if img.dtype != np.float32:
       if img.dtype.kind == 'u':
           img = img.astype(np.float32) / np.iinfo(img.dtype).max
-      # ---- TODO : handle this later
       else:
           print("Unsupported conversion")
           return 0
@@ -92,7 +91,11 @@ def compute_dictionary_one_image(opts, img_path):
     Extracts a random subset of filter responses of an image and save it to disk
     This is a worker function called by compute_dictionary
 
-    Your are free to make your own interface based on how you implement compute_dictionary
+    [input]
+    * opts     : options
+    * img_path : path to an input image
+    [saves]
+    * image_response: filter response of image
   '''
   # Load image 
   img = Image.open(join(opts.data_dir, img_path))
@@ -128,6 +131,7 @@ def compute_dictionary(opts, n_worker=1):
   
   # Go through all training images 
   pool = multiprocessing.Pool(n_worker)
+  #pool.starmap(compute_dictionary_one_image, zip(repeat(opts), train_files))
   for tfile in train_files:
     # Create dictionary for image in tfile
     pool.apply_async(compute_dictionary_one_image, [opts, tfile])
@@ -168,4 +172,4 @@ def get_visual_words(opts, img, dictionary):
       dist = scipy.spatial.distance.cdist(response[i, j].reshape(1, response.shape[2]), 
                                           dictionary, metric='euclidean')
       wordmap[i, j] = np.argmin(dist)
-  return wordmap   
+  return wordmap

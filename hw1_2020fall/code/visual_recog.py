@@ -22,11 +22,16 @@ def get_feature_from_wordmap(opts, wordmap, norm=True):
     * hist: numpy.ndarray of shape (K)
     '''
     K = opts.K
-    hist, _ = np.histogram(wordmap, bins=K)
-    if norm:
-        return hist / np.sum(hist)
-    else:
-        return hist
+    # Reference: https://stackoverflow.com/questions/18082536/
+    #            numpy-histogram-normalized-with-specified-edges-python
+    bins = np.linspace(0, K, K + 1)
+    hist, _ = np.histogram(wordmap, bins=bins, density=True)
+    return hist
+    
+    # hist, _ = np.histogram(wordmap, bins=K)
+    # if norm:
+    #     return hist / np.sum(hist) 
+    # return hist
     
 def compute_weight(l, L):
     if l == 0 or l == 1:
@@ -47,54 +52,27 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
     K = opts.K
     L = opts.L
     hist_all = np.zeros((int(K*(4 ** L-1)/3)), dtype=float)
-    
-    # Get histograms of the finest layer
+    j = 0
     i = 0
-    y_cell = math.ceil(wordmap.shape[0] / (2 ** (L-1)))
-    x_cell = math.ceil(wordmap.shape[1] / (2 ** (L-1)))
-    for y in range(0, wordmap.shape[0], y_cell):
-        max_y = wordmap.shape[0] if y > wordmap.shape[0] else y + y_cell
-        for x in range(0, wordmap.shape[1], x_cell):
-            max_x = wordmap.shape[1] if x > wordmap.shape[1] else x + x_cell
-            # Get histogram here
-            hist_all[i:i+K] = get_feature_from_wordmap(opts, 
-                                                       wordmap[y:max_y, x:max_x], 
-                                                       False)
-            i += K
-    # Normalize the layer 
-    hist_all[:i] /= np.sum(hist_all[:i])
-
-    # Get histograms of remaining layers
-    j = i
-    k = 0
-    n_cells_1d_prev = 2**(L-1)
-    for l in reversed(range(L-1)):
-        n_cells_1d = 2**l
-        for c in range(n_cells_1d * n_cells_1d):
-            k1 = k + 2*K
-            k2 = k + n_cells_1d_prev*K
-            hist_all[j:j+K]  =  hist_all[k:k+K]
-            hist_all[j:j+K] +=  hist_all[k+K:k1]
-            hist_all[j:j+K] +=  hist_all[k2:k2+K]
-            hist_all[j:j+K] +=  hist_all[k2+K:k1+n_cells_1d_prev*K]
-            if (c+1) % n_cells_1d == 0:
-                k = int(k1 + 4 * K * n_cells_1d / 2)
-            else:
-                k = int(k1)
-            j+=K
-        n_cells_1d_prev = n_cells_1d
-    
-    # Weight layers
-    j = i
-    # print(f"Layer {L-1} w {compute_weight(L-1, L-1)} range {0}-{K*4**(L-1)}")       
-    for l in reversed(range(L-1)):
-        num_cells = 2**l * 2**l
-        hist_all[j:j+num_cells*K] *= compute_weight(l, L-1)
-        # print(f"Layer {l} w {compute_weight(l, L-1)} range {j}-{j+num_cells*K}")
-        j += num_cells*K
-    hist_all[:4**(L-1)*K] *= compute_weight(L-1, L-1)
-    
-    # print(np.sum(hist_all), compute_weight(L-1, L-1))
+    for l in reversed(range(L)):    
+        y_cell = math.ceil(wordmap.shape[0] / (2 **l))
+        x_cell = math.ceil(wordmap.shape[1] / (2 **l))
+        w = compute_weight(l, L-1)
+        #print(y_cell, x_cell, w)
+        
+        for y in range(0, wordmap.shape[0], y_cell):
+            max_y = wordmap.shape[0] if y > wordmap.shape[0] else y + y_cell
+            for x in range(0, wordmap.shape[1], x_cell):
+                max_x = wordmap.shape[1] if x > wordmap.shape[1] else x + x_cell  
+                # print(f"y ({y},{max_y}), x ({x},{max_x}), cell({y_cell},{x_cell})")
+                cell_word = wordmap[y:max_y, x:max_x]
+                hist = get_feature_from_wordmap(opts, cell_word, False)
+                hist_all[i:i+K] = hist
+                i += K
+        hist_all[j:i] /= np.sum(hist_all[j:i])
+        hist_all[j:i] *= w
+        j = i       
+    # print(hist_all.shape, np.sum(hist_all))
     return hist_all
     
     
@@ -145,14 +123,11 @@ def build_recognition_system(opts, n_worker=1):
     # N = len(train_labels)
     # features = np.zeros((N, int(K*(4 ** SPM_layer_num-1)/3)), dtype=float)
     # for i in range(N):
-    #     features[i] = get_image_feature(opts, train_files, dictionary)
+    #     features[i] = get_image_feature(opts, train_files[i], dictionary)
         
     pool = multiprocessing.Pool(n_worker)
     features = pool.starmap(get_image_feature, 
                             zip(repeat(opts), train_files, repeat(dictionary)))
-    
-    #features = pool.map(get_image_feature, opts, train_files, dictionary)
-    #print(np.array(features).shape)
         
     ## example code snippet to save the learned system
     np.savez_compressed(join(out_dir, 'trained_system.npz'),
@@ -174,9 +149,10 @@ def distance_to_set(word_hist, histograms):
     * sim: numpy.ndarray of shape (N)
     '''
     sim = np.zeros(histograms.shape[0])
-    for i in range(histograms.shape[0]):
-        sim[i] = 1 - np.sum(np.minimum(word_hist, histograms[i]))
-    return sim    
+    sim = np.sum(np.minimum(word_hist, histograms), axis=1)
+    # for i in range(histograms.shape[0]):
+    #     sim[i] = 1 - np.sum(np.minimum(word_hist, histograms[i]))
+    return 1. - sim    
     
 def evaluate_recognition_system(opts, n_worker=1):
     '''
@@ -206,14 +182,18 @@ def evaluate_recognition_system(opts, n_worker=1):
     test_files = open(join(data_dir, 'test_files.txt')).read().splitlines()
     test_labels = np.loadtxt(join(data_dir, 'test_labels.txt'), np.int32)
 
+    # Get features of testing images
+    pool = multiprocessing.Pool(n_worker)
+    features = pool.starmap(get_image_feature, 
+                            zip(repeat(opts), test_files, repeat(dictionary)))
+    
     conf = np.zeros((8, 8), dtype=float)
     N = len(test_labels)
     for i in range(N): 
-        feature = get_image_feature(opts, test_files[i], dictionary)
-        
         gt_class = test_labels[i]
-        est_class = trained_labels[np.argmin(distance_to_set(feature, trained_features))]
+        est_class = trained_labels[np.argmin(distance_to_set(features[i], 
+                                                             trained_features))]
         conf[gt_class, est_class] += 1
-        print(f" GT: {gt_class} EST: {est_class} progress {100*i//N}")    
+        # print(f" GT: {gt_class} EST: {est_class} progress {100*i//N}")    
     return conf, np.trace(conf / np.sum(conf))
 
