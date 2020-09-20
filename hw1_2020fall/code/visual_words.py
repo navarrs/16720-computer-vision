@@ -127,13 +127,13 @@ def compute_dictionary(opts, n_worker=1):
   train_files = open(join(data_dir, 'train_files.txt')).read().splitlines()
   
   # Go through all training images 
-  # pool = multiprocessing.Pool(n_worker)
-  # for tfile in train_files:
-  #   # Create dictionary for image in tfile
-  #   pool.apply_async(compute_dictionary_one_image, [opts, tfile])
-  #   # compute_dictionary_one_image(opts, tfile)
-  # pool.close()
-  # pool.join()
+  pool = multiprocessing.Pool(n_worker)
+  for tfile in train_files:
+    # Create dictionary for image in tfile
+    pool.apply_async(compute_dictionary_one_image, [opts, tfile])
+    # compute_dictionary_one_image(opts, tfile)
+  pool.close()
+  pool.join()
   
   # Collect all responses back 
   responses = np.zeros((alpha * len(train_files), 4 * 3 * len(opts.filter_scales)))
@@ -165,7 +165,7 @@ def get_visual_words(opts, img, dictionary):
   response = extract_filter_responses(opts, img)
   for i in range(img.shape[0]):
     for j in range(img.shape[1]):
-      dist = scipy.spatial.distance.cdist(response[i, j].reshape(1, 48), 
+      dist = scipy.spatial.distance.cdist(response[i, j].reshape(1, response.shape[2]), 
                                           dictionary, metric='euclidean')
       wordmap[i, j] = np.argmin(dist)
   return wordmap   

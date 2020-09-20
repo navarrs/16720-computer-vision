@@ -1,11 +1,12 @@
 import os, math, multiprocessing
+import itertools
 from os.path import join
 from copy import copy
-
+from itertools import repeat
 import numpy as np
 import math
 from PIL import Image
-
+import tqdm
 import visual_words
 
 
@@ -110,7 +111,8 @@ def get_image_feature(opts, img_path, dictionary):
     [output]
     * feature: numpy.ndarray of shape (K)
     '''
-    img = Image.open(img_path)
+    #print(img_path)
+    img = Image.open(join(opts.data_dir, img_path))
     img = np.array(img).astype(np.float32)/255
     wordmap = visual_words.get_visual_words(opts, img, dictionary)
     return get_feature_from_wordmap_SPM(opts, wordmap)
@@ -139,29 +141,22 @@ def build_recognition_system(opts, n_worker=1):
     train_files = open(join(data_dir, 'train_files.txt')).read().splitlines()
     train_labels = np.loadtxt(join(data_dir, 'train_labels.txt'), np.int32)
     dictionary = np.load(join(out_dir, 'dictionary.npy'))
-    N = len(train_labels)
     
-    features = np.zeros((N, int(K*(4 ** SPM_layer_num-1)/3)), dtype=float)
+    # N = len(train_labels)
+    # features = np.zeros((N, int(K*(4 ** SPM_layer_num-1)/3)), dtype=float)
+    # for i in range(N):
+    #     features[i] = get_image_feature(opts, train_files, dictionary)
+        
+    pool = multiprocessing.Pool(n_worker)
+    features = pool.starmap(get_image_feature, 
+                            zip(repeat(opts), train_files, repeat(dictionary)))
     
-    # Go through all training images 
-    # pool = multiprocessing.Pool(n_worker)
-    # for tfile in train_files:
-    #   # Create dictionary for image in tfile
-    #   pool.apply_async(compute_dictionary_one_image, [opts, tfile])
-    #   # compute_dictionary_one_image(opts, tfile)
-    # pool.close()
-    # pool.join()
-    # pool = multiprocessing.Pool(n_worker)
-    # features = pool.map(get_image_feature, [])
-    
-    for i in range(N):
-        print(f"{i} of {N} progress {i*100/N}")
-        features[i] = get_image_feature(opts, join(data_dir, train_files[i]), 
-                                        dictionary)
+    #features = pool.map(get_image_feature, opts, train_files, dictionary)
+    #print(np.array(features).shape)
         
     ## example code snippet to save the learned system
     np.savez_compressed(join(out_dir, 'trained_system.npz'),
-        features=features,
+        features=np.array(features),
         labels=train_labels,
         dictionary=dictionary,
         SPM_layer_num=SPM_layer_num,
@@ -178,7 +173,7 @@ def distance_to_set(word_hist, histograms):
     [output]
     * sim: numpy.ndarray of shape (N)
     '''
-    sim = np.zero(histograms.shape[0])
+    sim = np.zeros(histograms.shape[0])
     for i in range(histograms.shape[0]):
         sim[i] = 1 - np.sum(np.minimum(word_hist, histograms[i]))
     return sim    
@@ -195,12 +190,13 @@ def evaluate_recognition_system(opts, n_worker=1):
     * conf: numpy.ndarray of shape (8,8)
     * accuracy: accuracy of the evaluated system
     '''
-
     data_dir = opts.data_dir
     out_dir = opts.out_dir
 
     trained_system = np.load(join(out_dir, 'trained_system.npz'))
     dictionary = trained_system['dictionary']
+    trained_features = trained_system['features']
+    trained_labels = trained_system['labels']
 
     # using the stored options in the trained system instead of opts.py
     test_opts = copy(opts)
@@ -210,6 +206,14 @@ def evaluate_recognition_system(opts, n_worker=1):
     test_files = open(join(data_dir, 'test_files.txt')).read().splitlines()
     test_labels = np.loadtxt(join(data_dir, 'test_labels.txt'), np.int32)
 
-    # ----- TODO -----
-    pass
+    conf = np.zeros((8, 8), dtype=float)
+    N = len(test_labels)
+    for i in range(N): 
+        feature = get_image_feature(opts, test_files[i], dictionary)
+        
+        gt_class = test_labels[i]
+        est_class = trained_labels[np.argmin(distance_to_set(feature, trained_features))]
+        conf[gt_class, est_class] += 1
+        print(f" GT: {gt_class} EST: {est_class} progress {100*i//N}")    
+    return conf, np.trace(conf / np.sum(conf))
 
