@@ -121,9 +121,8 @@ def main():
     
     ############################################################################
     ## Q2.6 
-    print("Q2.6 Finding failures") 
-    visual_recog.get_common_fails(opts)
-    
+    # print("Q2.6 Finding failures") 
+    # visual_recog.get_common_fails(opts)
     
     ############################################################################
     ## Q3.1 Hyperparameter tunning 
@@ -147,5 +146,6 @@ def main():
     #         best_result["L"] = result["L"]
     #         best_result["alpha"] = result["alpha"]
     # print(f"Best Model\n{best_result}")
+    
 if __name__ == '__main__':
     main()
