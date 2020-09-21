@@ -120,13 +120,3 @@ def get_results(opts):
     else:
       print(f"Could not find results in {d}")
   return models
-
-def get_common_fails(conf_mat, thresh_err):
-  common_fails = {}
-  for c in range(conf_mat.shape[1]):
-    common_fails[str(c)] = []
-    for r in range(conf_mat.shape[0]):
-      if r != c and conf_mat[r, c] > thresh_err:
-        if conf_mat[r, c] not in common_fails[str(c)]:
-          common_fails[str(c)].append(r)
-  return common_fails

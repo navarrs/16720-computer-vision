@@ -8,7 +8,18 @@ import math
 from PIL import Image
 import tqdm
 import visual_words
+from enum import Enum
 
+class Class(Enum):
+    AQUARIUM = 0
+    DESERT = 1
+    HIGHWAY = 2
+    KITCHEN = 3
+    LAUNDROMAT = 4
+    PARK = 5
+    WATERFALL = 6
+    WINDMILL = 7
+    
 ################################################################################
 # Q2.1
 def get_feature_from_wordmap(opts, wordmap):
@@ -230,12 +241,39 @@ def evaluate_recognition_system(opts, n_worker=1):
 
 ################################################################################
 # Q2.6 
-def get_common_fails(conf_mat, thresh_err):
+def get_common_fails(opts):
+    """
+        Gets a list of wrong predictions based on the evaluation outputs.
+    """
+    conf_mat = np.loadtxt(join(opts.out_dir, "confmat.csv"), delimiter=",")
     common_fails = {}
+    # Compute common fail list
     for c in range(conf_mat.shape[1]):
         common_fails[str(c)] = []
         for r in range(conf_mat.shape[0]):
-            if r != c and conf_mat[r, c] > thresh_err:
-                if conf_mat[r, c] not in common_fails[str(c)]:
+            if r == c:
+                continue
+            
+            if conf_mat[r, c] > opts.thresh_err:
+                if r not in common_fails[str(c)]:
                     common_fails[str(c)].append(r)
-    return common_fails
+    #print(common_fails)
+    # Extract the most common errors
+    pred_dir = join(opts.out_dir, "preds")
+    if not os.path.exists(pred_dir):
+        os.mkdir(pred_dir)
+        
+    preds_file = open(join(opts.out_dir, "pred.txt"), "r")
+    for line in preds_file.readlines():
+        pred = line.split(',')
+        gt = pred[0]
+        est = pred[1]
+        if gt != est and float(est) in common_fails[str(gt)]:            
+            gt = Class(int(gt)).name
+            est = Class(int(est)).name
+            img_path = pred[2].replace('\n', '')
+            print(f"{img_path} is {gt} but predicted as {est}")
+            img = Image.open(join(opts.data_dir, img_path))
+            img_name = img_path.split("/")[-1].split(".")[0] + f"_g-{gt}_e-{est}.png"
+            img.save(join(pred_dir, img_name), "PNG")
+    preds_file.close()

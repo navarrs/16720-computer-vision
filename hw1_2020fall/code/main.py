@@ -5,6 +5,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from os.path import join
+import os
 from PIL import Image
 from time import time
 
@@ -120,20 +121,9 @@ def main():
     
     ############################################################################
     ## Q2.6 
-    print("Q2.6 Finding failures")
-    conf = np.loadtxt(join(opts.out_dir, "confmat.csv"), delimiter=',')
-    common_fails = visual_recog.get_common_fails(conf, opts.thresh_err)
-    print(common_fails)
-    preds = open(join(opts.out_dir, "pred.txt"), "r")
-    for line in preds.readlines():
-        pred = line.split(',')
-        if pred[0] != pred[1]:
-            print("Error: ", line)
-
-    preds.close()
+    print("Q2.6 Finding failures") 
+    visual_recog.get_common_fails(opts)
     
-    # get confusion matrix
-    # look for hard samples
     
     ############################################################################
     ## Q3.1 Hyperparameter tunning 
