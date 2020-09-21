@@ -11,6 +11,8 @@ from enum import Enum
 from sklearn.cluster import KMeans
 from itertools import repeat
 
+################################################################################
+# Q1.1
 class Filter(Enum):
   """ 
     Enum containing the types of filters types available
@@ -85,7 +87,8 @@ def extract_filter_responses(opts, img):
         
   return filter_responses
 
-
+################################################################################
+# Q1.2
 def compute_dictionary_one_image(opts, img_path):
   '''
     Extracts a random subset of filter responses of an image and save it to disk
@@ -129,13 +132,14 @@ def compute_dictionary(opts, n_worker=1):
   alpha = opts.alpha
   train_files = open(join(data_dir, 'train_files.txt')).read().splitlines()
   
-  # Go through all training images 
+  # Sequential 
+  # for tfile in train_files:
+  #   compute_dictionary_one_image(opts, tfile)
+  
+  # Parallel
   pool = multiprocessing.Pool(n_worker)
-  #pool.starmap(compute_dictionary_one_image, zip(repeat(opts), train_files))
   for tfile in train_files:
-    # Create dictionary for image in tfile
     pool.apply_async(compute_dictionary_one_image, [opts, tfile])
-    # compute_dictionary_one_image(opts, tfile)
   pool.close()
   pool.join()
   
@@ -153,7 +157,8 @@ def compute_dictionary(opts, n_worker=1):
   dictionary = kmeans.cluster_centers_
   np.save(join(out_dir, 'dictionary.npy'), dictionary)
 
-
+################################################################################
+# Q1.3
 def get_visual_words(opts, img, dictionary):
   '''
     Compute visual words mapping for the given img using the dictionary of visual words.
