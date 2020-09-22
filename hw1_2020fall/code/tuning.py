@@ -32,10 +32,6 @@ def tune(alpha, filter_scales, K, L):
   OUT_DIR = opts.out_dir
     
   # Hyperparameters for the ablation study
-  alpha = [25, 75, 125]
-  filter_scales = [[1, 2], [1, 2, 4]]
-  K = [10, 20]
-  L = [1, 2, 3]
     
   # Tests
   test = 0
@@ -76,20 +72,9 @@ def tune(alpha, filter_scales, K, L):
             print("\tRecognition system exists")
           
           # Test
-          # print("\tEvaluation")
-          # start = time()
-          # conf, acc = visual_recog.evaluate_recognition_system(opts, n_worker=n_cpu)
-          # print(f"Confusion Matrix\n{conf}\n Accuracy: {acc}")
-          # print(f"Time  {(time() - start) / 60.0}")
-          # # Results
-          # print(f"Confusion Matrix\n{conf}\n Accuracy: {acc}")
-          # np.savetxt(join(opts.out_dir, 'confmat.csv'), conf, 
-          #           fmt='%d', delimiter=',')
-          # np.savetxt(join(opts.out_dir, 'accuracy.txt'), [acc], fmt='%g')
-          # np.savez_compressed(join(opts.out_dir, "model.npz"), 
-          #   filter_scales=fs, K=k, L=l, alpha=a, acc=acc, conf_mat=conf)
           if not os.path.exists(join(opts.out_dir, "accuracy.txt")) or \
-            not os.path.exists(join(opts.out_dir, "confmat.csv")):  
+            not os.path.exists(join(opts.out_dir, "confmat.csv")) or \
+            not os.path.exists(join(opts.out_dir, "model.npz")):  
             # Test
             print("\tEvaluation")
             start = time()
@@ -107,10 +92,13 @@ def tune(alpha, filter_scales, K, L):
           else:
             print("\tEvaluation exists")
 
-def get_results(opts):
+def get_results(opts, sorted=True):
   """
     Reads all output directories and returns the models
   """
+  def take_acc(v):
+    return v["acc"]
+  
   dirs = glob(opts.out_dir + "/test*")
   models = []
   for i, d in enumerate(dirs):
@@ -119,4 +107,18 @@ def get_results(opts):
       models.append(np.load(model_file, allow_pickle=True))
     else:
       print(f"Could not find results in {d}")
+  
+  if sorted:
+    models.sort(key=take_acc)
+    
   return models
+
+def display_results(results):
+  print(f"Scales\tAlpha\tK\tL\tAcc")
+  for result in results:
+    fs = result["filter_scales"]
+    k = result["K"]
+    l = result["L"]
+    acc = result["acc"]
+    alpha = result["alpha"]
+    print(f"{fs}\t{alpha}\t{k}\t{l}\t{acc}")

@@ -35,8 +35,12 @@ def get_opts():
                         help='# of layers in spatial pyramid matching (SPM)')
 
     ## Additional options (add your own hyperparameters here)
-    parser.add_argument('--thresh-err', type=int, default=8,
-                        help='# of incorrect classifications allowed')
+    
+    parser.add_argument('--thresh-err', type=float, default=0.12,
+                        help='percentage of error tolerance')
+
+    parser.add_argument('--k_dists', type=int, default=1, 
+                        help="# of elements to consider to predict class ")
     
     ##
     opts = parser.parse_args()

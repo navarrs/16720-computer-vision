@@ -102,6 +102,10 @@ def compute_dictionary_one_image(opts, img_path):
   '''
   # Load image 
   img = Image.open(join(opts.data_dir, img_path))
+  # s = opts.img_scale
+  # if s != 1.0 and s > 0.0:
+  #   w, h = img.size
+  #   img.resize((int(s*w), int(s*h)))  
   img = np.array(img).astype(np.float32)/255
   filter_responses = extract_filter_responses(opts, img)
   

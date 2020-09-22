@@ -6,7 +6,6 @@ from itertools import repeat
 import numpy as np
 import math
 from PIL import Image
-import tqdm
 import visual_words
 from enum import Enum
 
@@ -116,7 +115,8 @@ def distance_to_set(word_hist, histograms):
     
     # Parallel
     sim = np.sum(np.minimum(word_hist, histograms), axis=1)
-    return 1. - sim    
+    return 1. - sim
+        
 
 ################################################################################
 # Q2.4
@@ -228,52 +228,64 @@ def evaluate_recognition_system(opts, n_worker=1):
         os.remove(predfile)
         
     pred = open(predfile, "a")
-    for i in range(N): 
-        gt_class = test_labels[i]
-        est_class = trained_labels[np.argmin(distance_to_set(features[i], 
-                                                             trained_features))]
-        conf[gt_class, est_class] += 1
-        # Write result 
-        # print(f" GT: {gt_class} EST: {est_class} progress {100*i//N}")    
-        pred.write(f"{gt_class},{est_class},{test_files[i]}\n")
+    
+    if opts.k_dists == 1:
+        for i in range(N): 
+            gt_class = test_labels[i]
+            est_class = trained_labels[np.argmin(distance_to_set(features[i], 
+                                                                trained_features))]
+            conf[gt_class, est_class] += 1
+            pred.write(f"{gt_class},{est_class},{test_files[i]}\n")
+    else:
+        for i in range(N):
+            gt_class = test_labels[i]
+            idx = np.argsort(distance_to_set(features[i], trained_features))[:opts.k_dists]
+            est_class = np.argmax(np.bincount(trained_labels[idx]))
+            conf[gt_class, est_class] += 1
+            # Write result 
+            # print(f" GT: {gt_class} EST: {est_class} progress {100*i//N}")    
+            pred.write(f"{gt_class},{est_class},{test_files[i]}\n")
     pred.close()
     return conf, np.trace(conf / np.sum(conf))
 
 ################################################################################
 # Q2.6 
-def get_common_fails(opts):
+def get_common_fails(opts, save_errors=False):
     """
-        Gets a list of wrong predictions based on the evaluation outputs.
+        Computes a list of the classes with highest mis-classifications
+        [input]
+        * opts
+        * save_errors: if enabled saves misclassified images into a prediction directory
+        [output]
+        * a list containing [ground-truth class, predicted class, % missclassifications]
+        
     """
     conf_mat = np.loadtxt(join(opts.out_dir, "confmat.csv"), delimiter=",")
-    common_fails = {}
-    # Compute common fail list
-    for c in range(conf_mat.shape[1]):
-        common_fails[str(c)] = []
-        for r in range(conf_mat.shape[0]):
-            if r == c:
-                continue
-            
-            if conf_mat[r, c] > opts.thresh_err:
-                if r not in common_fails[str(c)]:
-                    common_fails[str(c)].append(r)
-    #print(common_fails)
+    conf_mat /= np.sum(conf_mat, axis=1)
+    print(conf_mat)
+    np.fill_diagonal(conf_mat, 0)
+    
+    max_errors = np.argwhere(conf_mat >= opts.thresh_err)
+    
     # Extract the most common errors
-    pred_dir = join(opts.out_dir, "preds")
-    if not os.path.exists(pred_dir):
-        os.mkdir(pred_dir)
+    if save_errors:
+        pred_dir = join(opts.out_dir, "preds")
+        if not os.path.exists(pred_dir):
+            os.mkdir(pred_dir)
+            
+        preds_file = open(join(opts.out_dir, "pred.txt"), "r")
+        for line in preds_file.readlines():
+            pred = line.split(',')
+            gt = pred[0]
+            est = pred[1]
+            if gt != est and [int(gt), int(est)] in max_errors:            
+                gt = Class(int(gt)).name
+                est = Class(int(est)).name
+                img_path = pred[2].replace('\n', '')
+                # print(f"{img_path} is {gt} but predicted as {est}")
+                img = Image.open(join(opts.data_dir, img_path))
+                img_name = img_path.split("/")[-1].split(".")[0] + f"_g-{gt}_e-{est}.png"
+                img.save(join(pred_dir, img_name), "PNG")
+        preds_file.close()
         
-    preds_file = open(join(opts.out_dir, "pred.txt"), "r")
-    for line in preds_file.readlines():
-        pred = line.split(',')
-        gt = pred[0]
-        est = pred[1]
-        if gt != est and float(est) in common_fails[str(gt)]:            
-            gt = Class(int(gt)).name
-            est = Class(int(est)).name
-            img_path = pred[2].replace('\n', '')
-            print(f"{img_path} is {gt} but predicted as {est}")
-            img = Image.open(join(opts.data_dir, img_path))
-            img_name = img_path.split("/")[-1].split(".")[0] + f"_g-{gt}_e-{est}.png"
-            img.save(join(pred_dir, img_name), "PNG")
-    preds_file.close()
+    return [[Class(e[0]), Class(e[1]), conf_mat[e[0],e[1]]] for e in max_errors]
