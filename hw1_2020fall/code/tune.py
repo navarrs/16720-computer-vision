@@ -49,11 +49,11 @@ def tune(alpha, filter_scales, K, L, D):
             test += 1
                 
             # Create test directory 
-            opts.out_dir = OUT_DIR + f"/test_l-{l}_k-{k}_fs-{len(fs)}_a-{a}_d-{d}_ims-{int(ims*100)}"
+            opts.out_dir = OUT_DIR + f"/test_l-{l}_k-{k}_fs-{len(fs)}_a-{a}_d-{d}"
             if not os.path.exists(opts.out_dir):
               os.mkdir(opts.out_dir)
                   
-            print(f"TEST [{test}/{total_tests}]: L-{l}_K-{k}_fs-{len(fs)}_a-{a}_d-{d}_ims-{int(ims*100)}")
+            print(f"TEST [{test}/{total_tests}]: L-{l}_K-{k}_fs-{len(fs)}_a-{a}_d-{d}")
               
             # Dictionary  
             if not os.path.exists(join(opts.out_dir, "dictionary.npy")):
