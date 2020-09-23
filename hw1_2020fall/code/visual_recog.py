@@ -229,17 +229,19 @@ def evaluate_recognition_system(opts, n_worker=1):
         
     pred = open(predfile, "a")
     
-    if opts.k_dists == 1:
+    if opts.D == 1:
         for i in range(N): 
             gt_class = test_labels[i]
             est_class = trained_labels[np.argmin(distance_to_set(features[i], 
                                                                 trained_features))]
             conf[gt_class, est_class] += 1
+            # Write result 
+            # print(f" GT: {gt_class} EST: {est_class} progress {100*i//N}") 
             pred.write(f"{gt_class},{est_class},{test_files[i]}\n")
     else:
         for i in range(N):
             gt_class = test_labels[i]
-            idx = np.argsort(distance_to_set(features[i], trained_features))[:opts.k_dists]
+            idx = np.argsort(distance_to_set(features[i], trained_features))[:opts.D]
             est_class = np.argmax(np.bincount(trained_labels[idx]))
             conf[gt_class, est_class] += 1
             # Write result 

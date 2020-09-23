@@ -14,7 +14,7 @@ import util
 import visual_words
 import visual_recog
 from opts import get_opts
-import tuning
+import tune
 
 def main():
     opts = get_opts()
@@ -33,11 +33,11 @@ def main():
     # util.display_filter_responses(opts, filter_responses)
 
     ## Q1.2 - Dictionary
-    # print("Q1.2 - Building dictionary")
-    # start = time()
-    # n_cpu = util.get_num_CPU()
-    # visual_words.compute_dictionary(opts, n_worker=n_cpu)
-    # print(f"Time: {(time() - start) / 60.0}")
+    print("Q1.2 - Building dictionary")
+    start = time()
+    n_cpu = util.get_num_CPU()
+    visual_words.compute_dictionary(opts, n_worker=n_cpu)
+    print(f"Time: {(time() - start) / 60.0}")
     
     ## Q1.3 - Wordmaps
     # img_path = join(opts.data_dir, 'park/labelme_aumetbzppbkuwju.jpg')
@@ -73,39 +73,26 @@ def main():
     # print(np.sum(hist))
     
     ## Q2.3 - 2.4 - Recognition System 
-    # print("Q2.3-2.4 - Building recognition system")
-    # start = time()
-    # n_cpu = util.get_num_CPU()
-    # visual_recog.build_recognition_system(opts, n_worker=n_cpu)
-    # print(f"Time  {(time() - start) / 60.0}")
+    print("Q2.3-2.4 - Building recognition system")
+    start = time()
+    n_cpu = util.get_num_CPU()
+    visual_recog.build_recognition_system(opts, n_worker=n_cpu)
+    print(f"Time  {(time() - start) / 60.0}")
     
     ## Q2.5 - Evaluation
-    # print("Q2.5 - Evaluating recognition system")
-    # start = time()
-    # n_cpu = util.get_num_CPU()
-    # conf, acc = visual_recog.evaluate_recognition_system(opts, n_worker=n_cpu)
-    # print(f"Time  {(time() - start) / 60.0}")
-    # print(f"Confusion Matrix\n{conf}\n Accuracy: {acc}")
-    # np.savetxt(join(opts.out_dir, 'confmat.csv'), conf, fmt='%d', delimiter=',')
-    # np.savetxt(join(opts.out_dir, 'accuracy.txt'), [acc], fmt='%g')
+    print("Q2.5 - Evaluating recognition system")
+    start = time()
+    n_cpu = util.get_num_CPU()
+    conf, acc = visual_recog.evaluate_recognition_system(opts, n_worker=n_cpu)
+    print(f"Time  {(time() - start) / 60.0}")
+    print(f"Confusion Matrix\n{conf}\n Accuracy: {acc}")
+    np.savetxt(join(opts.out_dir, 'confmat.csv'), conf, fmt='%d', delimiter=',')
+    np.savetxt(join(opts.out_dir, 'accuracy.txt'), [acc], fmt='%g')
     
     ## Q2.6 - Failure Analysis
     # print("Q2.6 Finding failures") 
     # common_fails = visual_recog.get_common_fails(opts)
     # print(common_fails)
-    
-    ## Q3.1 - Hyperparameter tunning 
-    # print("Q3.1 - Hyper Parameter tunning")
-    # alpha = [25, 125]
-    # filter_scales = [[1, 2], [1, 2, 4]]
-    # K = [10, 30, 50]
-    # L = [3, 2, 1]
-    # tuning.tune(alpha, filter_scales, K, L)
-    # print("Done")
-    
-    ## Q3.1 - Ablation results    
-    results = tuning.get_results(opts, sorted=True)
-    tuning.display_results(results)
     
 if __name__ == '__main__':
     main()
