@@ -1,0 +1,9 @@
+*.npy*
+*out*
+*data*
+*feat*
+*figures*
+*.pdf
+*.tex
+*.bib
+*pycache*
