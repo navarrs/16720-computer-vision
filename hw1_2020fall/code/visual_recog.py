@@ -74,7 +74,7 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
     hist_all = np.zeros((int(K*(4 ** L-1)/3)), dtype=float)
     j = 0
     i = 0
-    for l in reversed(range(L)):    
+    for l in reversed(range(L)):   
         y_cell = math.ceil(wordmap.shape[0] / (2 **l))
         x_cell = math.ceil(wordmap.shape[1] / (2 **l))
         w = compute_weight(l, L-1)
