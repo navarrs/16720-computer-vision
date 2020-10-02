@@ -32,5 +32,3 @@ plotMatches(cv_cover, cv_desk, matches, locs1, locs2, opts)
 
 # Ablation study 
 # ablation(opts, cv_cover, cv_desk)
-
-    

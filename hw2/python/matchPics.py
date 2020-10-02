@@ -30,5 +30,6 @@ def matchPics(I1, I2, opts):
 
     # Match features using the descriptors
     matches = briefMatch(desc1, desc2, ratio)
-    
+    # locs1 = locs1[matches[:, 0]]
+    # locs2 = locs2[matches[:, 1]]
     return matches, locs1, locs2
