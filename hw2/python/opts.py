@@ -25,8 +25,12 @@ def get_opts():
                         help='the tolerance value for considering a point to be an inlier')
 
     ## Additional options (add your own hyperparameters here)
-    parser.add_argument('--outdir', type=str, default="../data",
+    parser.add_argument('--outdir', type=str, default='../data',
                         help='output folder')
+    parser.add_argument('--img_file', type=str, default='img.png', 
+                        help="path to image")
+    parser.add_argument('--name', type=str, default='img', 
+                        help="image name")
     
     ##
     opts = parser.parse_args()

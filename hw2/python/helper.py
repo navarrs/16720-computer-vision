@@ -23,11 +23,12 @@ def plotMatches(im1, im2, matches, locs1, locs2, opts):
     skimage.feature.plot_matches(
         ax, im1, im2, locs1, locs2, matches, matches_color='r', only_matches=True)
     
-    name = "q2.1.5_m_s"+str(round(opts.sigma, 2))+"_r"+str(round(opts.ratio, 2))+".png"
+    # Save fig
+    name = os.path.join(opts.outdir, opts.name)
     plt.savefig(name)
     
-    
-    # plt.show()
+    plt.show()
+    plt.close()
     return
 
 
