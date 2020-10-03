@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from matchPics import matchPics
 from helper import plotMatches
-from planarH import computeH
+from planarH import *
 from opts import get_opts
 
 opts = get_opts()
@@ -18,4 +18,6 @@ matches, locs1, locs2 = matchPics(cv_cover, cv_desk, opts)
 # Homography
 x1 = locs1[matches[:, 0]]
 x2 = locs2[matches[:, 1]]
-H2to1 = computeH(x1, x2)
+# H2to1 = computeH(x1, x2)
+# H2to1 = computeH_norm(x1, x2)
+
