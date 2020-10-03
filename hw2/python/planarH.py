@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.linalg
 import cv2
+import random
 
 def computeH(x1, x2):
   def createA():
@@ -87,14 +88,40 @@ def computeH_norm(x1, x2):
   return H2to1
 
 
-# def computeH_ransac(locs1, locs2, opts):
-#     # Q2.2.3
-#     # Compute the best fitting homography given a list of matching points
-#     max_iters = opts.max_iters  # the number of iterations to run RANSAC for
-#     # the tolerance value for considering a point to be an inlier
-#     inlier_tol = opts.inlier_tol
-
-#     return bestH2to1, inliers
+def computeH_ransac(locs1, locs2, opts):
+  # Q2.2.3
+  # Compute the best fitting homography given a list of matching points
+  max_iters = opts.max_iters  # the number of iterations to run RANSAC for
+  # the tolerance value for considering a point to be an inlier
+  inlier_tol = opts.inlier_tol
+  n = locs1.shape[0]
+  
+  max_inliers = 0
+  
+  for i in range(max_iters):
+    inliers = np.zeros((n, 1), dtype=np.int)
+    samples = random.sample(range(n), 4)
+    inliers[samples] = 1
+    x1 = locs1[samples]
+    x2 = locs2[samples]
+    
+    H2to1 = computeH(x1, x2)
+    
+    for i in range(n):
+      x2_ = np.r_[locs2[i], 1]
+      x1_ = np.r_[locs1[i], 1]
+      x1_est = np.dot(H2to1, np.transpose(x2_))
+      x1_est = x1_est/x1_est[-1]
+      err = np.linalg.norm(x1_est - x1_)
+      if err <= inlier_tol:
+        inliers[i] = 1
+    
+    inlier_count = np.sum(inliers)
+    if inlier_count > max_inliers:
+      bestH2to1 = H2to1
+      max_inliers = inlier_count
+  
+  return bestH2to1, inliers
 
 
 # def compositeH(H2to1, template, img):
