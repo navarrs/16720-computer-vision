@@ -32,6 +32,9 @@ def get_opts():
     parser.add_argument('--name', type=str, default='img', 
                         help="image name")
     
+     parser.add_argument("--ablation", action="store_true", 
+                         help="performs ablation study if enabled")
+    
     ##
     opts = parser.parse_args()
 

@@ -127,7 +127,6 @@ def computeH_ransac(locs1, locs2, opts):
     
     # Compute the homography from the points
     # H = computeH(x1, x2)
-    # TODO: fix 
     H = computeH_norm(x1, x2)
     
     # Estimate the error of reprojection
@@ -157,22 +156,23 @@ def compositeH(H2to1, template, img):
   # x_template = H2to1*x_photo
   # For warping the template to the image, we need to invert it.
   
-  H2to1 = np.linalg.inv(H2to1)
+  H2to1_inv = np.linalg.inv(H2to1)
    
   # Create mask of same size as template
   mask = np.ones_like(template)
   
   # Warp mask by appropriate homography
-  mask_warp = cv2.warpPerspective(mask, H2to1, 
+  mask_warp = cv2.warpPerspective(mask, H2to1_inv, 
                                  (img.shape[1], img.shape[0]))
+  # print(mask_warp.shape, img.shape)
  
   # Warp template by appropriate homography
-  templ_warp = cv2.warpPerspective(template, H2to1, 
+  templ_warp = cv2.warpPerspective(template, H2to1_inv, 
                                  (img.shape[1], img.shape[0]))
-  cv2.imshow('mask', templ_warp)
-  cv2.waitKey(0)
+  # cv2.imshow('mask', templ_warp)
+  # cv2.waitKey(0)
   
-  # Use mask to combine the warped template and the image
+  # # Use mask to combine the warped template and the image
   composite_img = (1-mask_warp) * img + templ_warp
   
   return composite_img
