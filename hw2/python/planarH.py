@@ -110,27 +110,33 @@ def computeH_ransac(locs1, locs2, opts):
   
   max_inliers = 0
   
+  # Homogeneous points  
+  X1_ = np.c_[locs1, np.ones(locs1.shape[0])]
+  X2_ = np.c_[locs2, np.ones(locs2.shape[0])]
+  
   for i in range(max_iters):
-    inliers = np.zeros((n, 1), dtype=np.int)
     samples = random.sample(range(n), 4)
-    inliers[samples] = 1
+    
+    # Get the sampled points
     x1 = locs1[samples]
     x2 = locs2[samples]
     
-    H = computeH(x1, x2)
+    # Inlier counter 
+    inliers = np.zeros((n, 1), dtype=np.int)
+    inliers[samples] = 1
+    
+    # Compute the homography from the points
+    # H = computeH(x1, x2)
     # TODO: fix 
-    # H = computeH_norm(x1, x2)
+    H = computeH_norm(x1, x2)
     
-    x1_ = np.c_[locs2, np.ones((locs2.shape[0]))]
-    x2_ = np.c_[locs1, np.ones((locs1.shape[0]))]
-    
-    x1_est = np.dot(H, x2_.T).T
-    x1_est = np.divide(x1_est, x1_est[:, -1].reshape(x1_est.shape[0], 1))
-    
-    # print(f"x1 {x1_}\n x1_est {x1_est}") 
-    err = x1_est - x1_
-    err = np.sqrt(np.sum(err**2, axis=1))
-    # err = np.linalg.norm(err, axis = 0, ord=2)
+    # Estimate the error of reprojection
+    X1_est = np.matmul(H, X2_.T)
+    X1_est = np.divide(X1_est, X1_est[-1, :]).T #.reshape(X1_.shape)
+    err = X1_est - X1_
+    err = np.linalg.norm(err, axis = 1, ord=2)
+    # err = np.sqrt(np.sum(err**2, axis=1))
+    # print(err)
     
     inliers[err < inlier_tol] = 1
     
@@ -140,7 +146,7 @@ def computeH_ransac(locs1, locs2, opts):
       bestH2to1 = H
       best_inliers = inliers
       max_inliers = inlier_count
-  
+
   return bestH2to1, best_inliers
 
 
@@ -151,7 +157,7 @@ def compositeH(H2to1, template, img):
   # x_template = H2to1*x_photo
   # For warping the template to the image, we need to invert it.
   
-  # H2to1 = np.linalg.inv(H2to1)
+  H2to1 = np.linalg.inv(H2to1)
    
   # Create mask of same size as template
   mask = np.ones_like(template)
