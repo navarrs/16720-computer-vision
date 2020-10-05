@@ -67,4 +67,3 @@ else:
   composite_img = compositeH(H, hp_cover, cv_desk)
   cv2.imshow("composite_img", composite_img)
   cv2.waitKey(0)
-
