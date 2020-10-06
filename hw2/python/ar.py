@@ -18,15 +18,14 @@ cap_bk = cv2.VideoCapture('../data/book.mov')
 cap_ar = cv2.VideoCapture('../data/ar_source.mov')
 
 frameSize = (640, 480)
-video_out = cv2.VideoWriter('../out/q3-1/ar_out.avi', 
-                            cv2.VideoWriter_fourcc(*'XVID'), 60, frameSize)
+video_out = cv2.VideoWriter('../out/q3-1/ar_out_2.avi', 
+                            cv2.VideoWriter_fourcc(*'XVID'), 24, frameSize)
 
 h1, w1, _ = cv_cover.shape
 
 c = 0
 while cap_bk.isOpened() and cap_ar.isOpened():
   c += 1
-  print(f"Frames: {c}")
   ret1, bk_frame = cap_bk.read()
   ret2, ar_frame = cap_ar.read()
 

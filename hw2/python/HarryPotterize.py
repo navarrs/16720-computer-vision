@@ -59,7 +59,7 @@ else:
   
   # Warp image
   warped = cv2.warpPerspective(hp_cover, np.linalg.inv(H), 
-                              (cv_desk.shape[0], cv_desk.shape[1]))
+                              (cv_desk.shape[1], cv_desk.shape[0]))
   cv2.imshow("warped", warped)
   cv2.waitKey(0)
   

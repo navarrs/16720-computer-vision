@@ -5,7 +5,6 @@ from helper import briefMatch
 from helper import computeBrief
 from helper import corner_detection
 
-
 def matchPics(I1, I2, opts):
     # I1, I2 : Images to match
     # opts: input opts
