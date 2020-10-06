@@ -48,6 +48,12 @@ def match(desc1, kp1, desc2, kp2, dist_thrsh=0.7):
             locs2.append([kp2[m.trainIdx].pt[0], kp2[m.trainIdx].pt[1]])
     return np.asarray(locs1), np.asarray(locs2)
 
+def warp(H, template, img):
+  mask = np.ones_like(template)
+  mask_warp = cv2.warpPerspective(mask, H, (img.shape[1], img.shape[0]))
+  templ_warp = cv2.warpPerspective(template, H, (img.shape[1], img.shape[0]))
+  composite_img = (1-mask_warp) * img + templ_warp
+  return composite_img
 
 def main():
     cv_cover = cv2.imread('../data/cv_cover.jpg')
@@ -80,31 +86,32 @@ def main():
     # Feature matching
     kp1, desc1 = detect_features(cv_cover)
 
+    start = time()
+    frames = 0
+    opts.max_iters = 100
     while cap_bk.isOpened() and cap_ar.isOpened():
-
+        frames += 1
         # get video frames
         ret1, bk_frame = cap_bk.read()
         ret2, ar_frame = cap_ar.read()
 
         if ret1 and ret2:
             h2, w2, _ = ar_frame.shape
-            ar_cover = ar_frame[50:-50, int((w2-w1)/2):int((w2+w1)/2)]
-            ar_cover = cv2.resize(ar_cover,
-                                  dsize=(cv_cover.shape[1], cv_cover.shape[0]))
-
             kp2, desc2 = detect_features(bk_frame)
             locs1, locs2 = match(desc1, kp1, desc2, kp2)
 
             if len(locs1) >= 4:
-                H, inliers = computeH_ransac(locs1, locs2, opts)
-                composite_img = compositeH(H, ar_cover, bk_frame)
+                # H, inliers = computeH_ransac(locs1, locs2, opts)
+                H, m = cv2.findHomography(locs1, locs2, cv2.RANSAC)
+                composite_img = warp(H, ar_frame, bk_frame)
                 cv2.imshow('AR', composite_img)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
         else:
             break
-
+    end = time()
+    print(f"FPS {frames / (end - start)}")
     cap_bk.release()
     cap_ar.release()
     cv2.destroyAllWindows()

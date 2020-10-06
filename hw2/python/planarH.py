@@ -157,7 +157,7 @@ def compositeH(H2to1, template, img):
   # For warping the template to the image, we need to invert it.
   
   H2to1_inv = np.linalg.inv(H2to1)
-   
+     
   # Create mask of same size as template
   mask = np.ones_like(template)
   
