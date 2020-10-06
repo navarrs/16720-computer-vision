@@ -20,14 +20,13 @@ import matplotlib.pyplot as plt
 # ORB feature descriptor
 orb = cv2.ORB_create()
 # BF Matcher
-bfm = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+bfm = cv2.BFMatcher()
+# bfm = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 
 opts = get_opts()
 
 # Functions
 # ------------------------------------------------------------------------------
-
-
 def detect_features(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     kp, desc = orb.detectAndCompute(img, None)
@@ -35,14 +34,17 @@ def detect_features(img):
 
 
 def match(desc1, kp1, desc2, kp2, dist_thrsh=0.7):
-    matches = bfm.match(desc1, desc2)
+    # matches = bfm.match(desc1, desc2)
+    matches = bfm.knnMatch(desc1, desc2, k=2)
     # img3 = cv2.drawMatches(img1,kp1,img2,kp2,matches,None,
     #                        flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     # plt.imshow(img3),plt.show()
     locs1 = []
     locs2 = []
-    for i, m in enumerate(matches):
-        if i < len(matches) - 1 and m.distance < dist_thrsh * matches[i+1].distance:
+    # for i, m, n in enumerate(matches):
+    #     if i < len(matches) - 1 and m.distance < dist_thrsh * matches[i+1].distance:
+    for m, n in matches:
+        if m.distance < dist_thrsh*n.distance:
             # print(f"Found match: {i} with distance {m.distance}")
             locs1.append([kp1[m.queryIdx].pt[0], kp1[m.queryIdx].pt[1]])
             locs2.append([kp2[m.trainIdx].pt[0], kp2[m.trainIdx].pt[1]])
@@ -55,6 +57,8 @@ def warp(H, template, img):
   composite_img = (1-mask_warp) * img + templ_warp
   return composite_img
 
+# Main
+# ------------------------------------------------------------------------------
 def main():
     cv_cover = cv2.imread('../data/cv_cover.jpg')
     h1, w1, _ = cv_cover.shape
@@ -98,7 +102,7 @@ def main():
         if ret1 and ret2:
             h2, w2, _ = ar_frame.shape
             kp2, desc2 = detect_features(bk_frame)
-            locs1, locs2 = match(desc1, kp1, desc2, kp2)
+            locs1, locs2 = match(desc1, kp1, desc2, kp2, 0.8)
 
             if len(locs1) >= 4:
                 # H, inliers = computeH_ransac(locs1, locs2, opts)
