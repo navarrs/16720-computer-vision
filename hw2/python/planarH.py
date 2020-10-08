@@ -47,35 +47,33 @@ def computeH_norm(x1, x2):
   
   # Normalize the points so that the largest distance from the origin is equal 
   # to sqrt(2)  
-  scale_x1 = 0
-  for i in range(n):
-    scale_x1 += np.linalg.norm(x1_s[i])
-  scale_x1 /= n
-  scale_x1 = np.sqrt(2) / scale_x1
-  x1_n = scale_x1 * x1_s
+  # scale_x1 = 0
+  # for i in range(n):
+  #   scale_x1 += np.linalg.norm(x1_s[i])
+  # scale_x1 /= n
+  # scale_x1 = np.sqrt(2) / scale_x1
+  # x1_n = scale_x1 * x1_s
   # print(f"With scale: {scale_x1} normalized x2:\n{x1_n}")
   
   # TODO: fix parallel
-  # x1_sc = np.max(np.sqrt(np.sum(x1_s **2, axis=1)))
-  # x1_sc = np.sqrt((1/(n)) * np.sum(x1_s**2))
-  # x1_sc = np.sqrt(2)/x1_sc
-  # x1_sc = 1/x1_sc
-  # x1_n = x1_sc * x1_s
+  scale_x1 = np.max(np.sqrt(np.sum(x1_s **2, axis=1)))
+  scale_x1 = np.sqrt(2)/scale_x1
+  # scale_x1 = 1/scale_x1
+  x1_n = scale_x1 * x1_s
   
-  scale_x2 = 0
-  for i in range(n):
-    scale_x2 += np.linalg.norm(x2_s[i])
-  scale_x2 /= n
-  scale_x2 = np.sqrt(2) / scale_x2
-  x2_n = scale_x2 * x2_s
+  # scale_x2 = 0
+  # for i in range(n):
+  #   scale_x2 += np.linalg.norm(x2_s[i])
+  # scale_x2 /= n
+  # scale_x2 = np.sqrt(2) / scale_x2
+  # x2_n = scale_x2 * x2_s
   # print(f"With scale: {scale_x2} normalized x2:\n{x2_n}")
   
   # TODO: fix parallel
-  # x2_sc = np.max(np.sqrt(np.sum(x2_s **2, axis=1)))
-  # x2_sc = np.sqrt((1/(2*n)) * np.sum(x2_s**2))
-  # x2_sc = np.sqrt(2)/x2_sc
-  # x2_sc = 1/x2_sc
-  # x2_n = x2_sc * x2_s
+  scale_x2 = np.max(np.sqrt(np.sum(x2_s **2, axis=1)))
+  scale_x2 = np.sqrt(2)/scale_x2
+  # scale_x2 = 1/scale_x2
+  x2_n = scale_x2 * x2_s
   
   # Similarity Transform 1
   T1 = np.matrix([[scale_x1, 0, -x1_c[0]*scale_x1], 

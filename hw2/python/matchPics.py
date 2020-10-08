@@ -11,13 +11,11 @@ def matchPics(I1, I2, opts):
     ratio = opts.ratio  # 'ratio for BRIEF feature descriptor'
     sigma = opts.sigma  # 'threshold for corner detection using FAST feature detector'
     
-
     # Convert Images to GrayScale
-    # I1 = skimage.color.rgb2gray(I1)
-    I1 = cv2.cvtColor(I1, cv2.COLOR_BGR2GRAY)
-    
-    # I2 = skimage.color.rgb2gray(I2)
-    I2 = cv2.cvtColor(I2, cv2.COLOR_BGR2GRAY)
+    I1 = skimage.color.rgb2gray(I1)
+    I2 = skimage.color.rgb2gray(I2)
+    # I1 = cv2.cvtColor(I1, cv2.COLOR_BGR2GRAY)
+    # I2 = cv2.cvtColor(I2, cv2.COLOR_BGR2GRAY)
 
     # Detect Features in Both Images
     locs1 = corner_detection(I1, sigma)
@@ -29,6 +27,4 @@ def matchPics(I1, I2, opts):
 
     # Match features using the descriptors
     matches = briefMatch(desc1, desc2, ratio)
-    # locs1 = locs1[matches[:, 0]]
-    # locs2 = locs2[matches[:, 1]]
     return matches, locs1, locs2

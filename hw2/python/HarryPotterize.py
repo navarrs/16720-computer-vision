@@ -43,6 +43,7 @@ matches, locs1, locs2 = matchPics(cv_cover, cv_desk, opts)
 # plotMatches(cv_cover, hp_cover, matches, locs1, locs2, opts)
 locs1 = locs1[matches[:, 0]]
 locs2 = locs2[matches[:, 1]]
+# Locations are inverted
 locs1[:, [0, 1]] = locs1[:, [1,0]]
 locs2[:, [0, 1]] = locs2[:, [1,0]]
 

@@ -24,8 +24,8 @@ def plotMatches(im1, im2, matches, locs1, locs2, opts):
         ax, im1, im2, locs1, locs2, matches, matches_color='r', only_matches=True)
     
     # Save fig
-    name = os.path.join(opts.outdir, opts.name)
-    plt.savefig(name)
+    # name = os.path.join(opts.outdir, opts.name)
+    # plt.savefig(name)
     
     plt.show()
     plt.close()
