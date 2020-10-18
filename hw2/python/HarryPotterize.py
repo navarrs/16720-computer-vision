@@ -1,3 +1,5 @@
+# @author ingridn
+# Q2.2.4 Harrypoterizing 
 import numpy as np
 import cv2
 import skimage.io 

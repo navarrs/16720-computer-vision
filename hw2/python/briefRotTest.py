@@ -1,3 +1,5 @@
+# @author ingridn
+# Q2.1.6 BRIEF rotation test
 import numpy as np
 import scipy
 import cv2

@@ -1,3 +1,5 @@
+# @author ingridn
+# Q2.1.4 Matches
 import numpy as np
 import cv2
 from matchPics import matchPics

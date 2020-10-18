@@ -1,3 +1,5 @@
+# @author ingridn
+# Q3.1 AR video
 import numpy as np
 import cv2
 
@@ -20,13 +22,16 @@ print("Done.\nLoading AR source video...")
 ar_frames = loadVid('../data/ar_source.mov')
 print("Done.")
 
-frameSize = (640, 480)
-video_out = cv2.VideoWriter('../out/q3-1/ar_out_2.avi',
-                            cv2.VideoWriter_fourcc(*'XVID'), 24, frameSize)
+size = (640, 480)
+video_out = cv2.VideoWriter(
+    'ar.avi', cv2.VideoWriter_fourcc(*'XVID'), 24, size)
 
 n_frames = len(bk_frames) if len(bk_frames) < len(ar_frames) else len(ar_frames)
 h1, w1, _ = cv_cover.shape
 h2, w2, _ = ar_frames[0].shape
+
+# Just for testing
+# n_frames = 24
 
 print("Writing AR video...")
 for i in range(n_frames):
