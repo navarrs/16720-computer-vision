@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 # write your script here, we recommend the above libraries for making your animation
+from LucasKanadeAffine import LucasKanadeAffine as LKA
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--num_iters', type=int, default=1e3, help='number of iterations of Lucas-Kanade')
@@ -15,3 +17,10 @@ threshold = args.threshold
 tolerance = args.tolerance
 
 seq = np.load('../data/antseq.npy')
+
+for i in range(seq.shape[2]-1):
+    pass
+    # Compute p
+    
+i = 0
+M = LKA(seq[:, :, i], seq[:, :, i+1], threshold, num_iters)
