@@ -1,4 +1,8 @@
 import numpy as np
+from scipy.ndimage import binary_erosion, binary_dilation
+import cv2 
+
+from LucasKanadeAffine import LucasKanadeAffine as LKA
 
 def SubtractDominantMotion(image1, image2, threshold, num_iters, tolerance):
     """
@@ -13,4 +17,15 @@ def SubtractDominantMotion(image1, image2, threshold, num_iters, tolerance):
     # put your implementation here
     mask = np.ones(image1.shape, dtype=bool)
 
+    M = LKA(image1, image2, threshold, num_iters)
+    
+    # Match It to It1
+    # warpAffine needs a 2x3 matrix
+    # M = np.linalg.inv(M)
+    Iw1 = cv2.warpAffine(image2, M[:2,:], dsize=image1.shape) 
+    d_ = abs(image2 - Iw1)
+    mask[d_ < tolerance] = 0
+    
+    mask = binary_dilation(mask, iterations=2)
+    mask = binary_erosion(mask, iterations=3)
     return mask

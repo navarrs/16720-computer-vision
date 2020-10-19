@@ -7,7 +7,7 @@ import os
 from LucasKanade import LucasKanade as LK
 
 #
-# PARAMETERS ------------
+# PARSING ----------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument('--num_iters', type=int, default=1e4,
                     help='number of iterations of Lucas-Kanade')
@@ -18,28 +18,34 @@ args = parser.parse_args()
 num_iters = args.num_iters
 threshold = args.threshold
 
-OUT_DIR = "../out/q1"
+OUT_DIR = "../out/q1-3"
 if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
 
-#
-# MAIN ------------
+# 
+# MAIN -------------------------------------------------------------------------
 seq = np.load("../data/carseq.npy")
 rect = [59., 116., 145., 151.]
+capture = [1, 100, 200, 300, 400]
+car_rects = np.zeros((seq.shape[2], 4))
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
-car_rects = np.zeros((seq.shape[2], 4))
-for i in range(seq.shape[2]):
+for i in range(seq.shape[2]-1):
 
     car_rects[i, :] = rect
 
     # Compute p
     p = LK(seq[:, :, i], seq[:, :, i+1], rect, threshold, num_iters)
 
-
+    # Update bbox
+    rect[0] += p[0]
+    rect[1] += p[1]
+    rect[2] += p[0]
+    rect[3] += p[1]
+    
     # Save images falling in this condition
-    if i == 1 or i % 100 == 0:
+    if i in capture:
         w = rect[2] - rect[0]
         h = rect[3] - rect[1]
         r = plt.Rectangle((rect[0], rect[1]),
@@ -51,19 +57,13 @@ for i in range(seq.shape[2]):
         plt.draw()
         plt.savefig(OUT_DIR + f"/carseq_{i}.png")
         r.remove()
-        
-    # Update bbox
-    rect[0] += p[0]
-    rect[1] += p[1]
-    rect[2] += p[0]
-    rect[3] += p[1]
-    
 plt.close()
 
 with open(OUT_DIR + "/carseqrects.npy", "wb") as f:
     np.save(f, car_rects)
 
-
+#
+# SANITY CHECK -----------------------------------------------------------------
 if args.visualize:
     with open(OUT_DIR + "/carseqrects.npy", 'rb') as f:
         rects = np.load(f)

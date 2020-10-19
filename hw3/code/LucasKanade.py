@@ -17,39 +17,40 @@ def LucasKanade(It, It1, rect, threshold, num_iters, p0=np.zeros(2)):
 
     # create mesh of rect 
     rw, rh = int(rect[2]-rect[0]), int(rect[3]-rect[1])
-    xr = np.linspace(start=rect[0], stop=rect[2], num=rw, endpoint=False)
-    yr = np.linspace(start=rect[1], stop=rect[3], num=rh, endpoint=False)
-    Yr, Xr = np.meshgrid(yr, xr)
+    Xr, Yr = np.meshgrid(np.linspace(start=rect[0], stop=rect[2], num=rw, endpoint=False),
+                         np.linspace(start=rect[1], stop=rect[3], num=rh, endpoint=False))
     
     x_, y_ = np.arange(It.shape[1]), np.arange(It.shape[0])
     T = RectBivariateSpline(y_, x_, z=It) # Template
     T_ = T.ev(Yr, Xr)
     I = RectBivariateSpline(y_, x_, z=It1) # Image
-   
+    
+    dWdp = np.array([[1., 0.], [0., 1.]])
+    dI = np.zeros((rw*rh, 2))
+    
     for i in range(int(num_iters)):
         
         # I(W(X,p))
-        I_ = I.ev(Yr + p[1], Xr + p[0])
+        Iw = I.ev(Yr + p[1], Xr + p[0])
         
         # T(X) - I(W(X,p))
-        err_im = T_ - I_
+        err_im = T_ - Iw
         b = err_im.reshape(-1, 1)
         
         # dI/dX'
-        dIdx = I.ev(Yr + p[1], Xr + p[0], dy=1).ravel()
-        dIdy = I.ev(Yr + p[1], Xr + p[0], dx=1).ravel()
-        A = np.zeros((rw*rh, 2))
-        A[:, 0] = dIdx 
-        A[:, 1] = dIdy
-        # print(A.shape)
+        dIdy, dIdx = np.gradient(Iw)
+        dI[:, 0] = dIdx.ravel()
+        dI[:, 1] = dIdy.ravel()
         
-        #|| Adp - b ||2
-        # dp = A^-1 * b
-        dp = np.dot(np.linalg.pinv(A), b)
+        # dIdW
+        A = dI @ dWdp
+        H = A.T @ A 
+        # A = np.linalg.pinv(H) @ A.T
+        dp = np.linalg.inv(H) @ (A.T) @ b
         
         p[0] += dp[0]
         p[1] += dp[1]
-        
+               
         if np.linalg.norm(dp) <= threshold:
             break
             
