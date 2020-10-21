@@ -17,70 +17,52 @@ def LucasKanadeAffine(It, It1, threshold, num_iters):
     
     T = RectBivariateSpline(y_, x_, It)
     I = RectBivariateSpline(y_, x_, It1)
+    dIt1dy_, dIt1dx_ = np.gradient(It1)
+    dIdx = RectBivariateSpline(y_, x_, dIt1dx_)
+    dIdy = RectBivariateSpline(y_, x_, dIt1dy_)
+    
+    # Create the homogeneous coordinates
     xx_, yy_ = np.meshgrid(x_, y_)
-    T_ = T.ev(yy_, xx_)
-
-    # homogeneous coords
-    c = np.array([[0.0, 0.0, 1.0],
-                  [  W,   H, 1.0]]).T
+    x = xx_.reshape(W*H)
+    y = yy_.reshape(W*H)
+    C = np.vstack((x, y, np.ones((W*H))))
     
     for i in range(int(num_iters)):
-
-        M = np.array([[1.0 + p[0], p[1], p[2]],
-                      [p[3], 1.0 + p[4], p[5]], 
-                      [0.0, 0.0, 1.0]])
         
-        # Region shared
-        c_ = np.matmul(M, c)
-        x1 = c_[0, 0] if c_[0, 0] > 0.0 else 0.0
-        y1 = c_[1, 0] if c_[1, 0] > 0.0 else 0.0
-        x2 = c_[0, 1] if c_[0, 1] < float(W) else float(W)
-        y2 = c_[1, 1] if c_[1, 1] < float(H) else float(H)
+        c = M @ C
+        # Mask valid points
+        mask = (c[0] >= 0) & (c[1] >= 0) & (c[0] < W) & (c[1] <= H)
+        x_, y_ = x[mask], y[mask]
+        xw_, yw_ = c[0][mask], c[1][mask]
         
-        w = int(x2-x1)
-        h = int(y2-y1)
-        X, Y = np.meshgrid(np.linspace(x1, x2, num=w),
-                           np.linspace(y1, y2, num=h))
-
-        # Iwarp
-        Iw = I.ev(Y, X)
-        T_ = T.ev(Y, X)
+        # Iw
+        Iw = I.ev(yw_, xw_)
+        T_ = T.ev(y_, x_)
         
-        # Tx - Iw
-        err = T_ - Iw
-        b = err.reshape(-1, 1)
-
-        # dI
-        dIdx, dIdy = np.gradient(Iw)
-        dI = np.vstack((dIdx.ravel(), dIdy.ravel())).T
-
-        A = np.zeros((w*h, 6))
+        # T - I
+        b = (T_ - Iw).reshape(-1, 1)
         
-        k = 0
-        for i in range(h):
-            for j in range(w):
-                # dWdp = | x 0 y 0 1 0 |
-                #        | 0 x x y 0 1 |
-                dWdp = np.array([[j, 0, i, 0, 1, 0],
-                                 [0, j, 0, i, 0, 1]])
-                
-                # dIdW = dI @ dWdp
-                A[k] = dI[k] @ dWdp
-                k += 1
-
+        # dIw
+        dI = np.vstack((dIdx.ev(yw_, xw_), dIdy.ev(yw_, xw_)))
+        # print(T_.shape, Iw.shape, dI.shape)
+        
+        # Build A
+        X = dI * x_
+        Y = dI * y_
+        A = np.vstack((X[0], Y[0], dI[0], 
+                       X[1], Y[1], dI[1])).T
+    
         dp = np.linalg.pinv(A) @ b
-
-        p[0] += dp[0]
-        p[1] += dp[1]
-        p[2] += dp[2]
-        p[3] += dp[3]
-        p[4] += dp[4]
-        p[5] += dp[5]
+        # print(np.linalg.norm(dp))
+        
+        M[0, 0] += dp[0]
+        M[0, 1] += dp[1]
+        M[0, 2] += dp[2]
+        M[1, 0] += dp[3]
+        M[1, 1] += dp[4]
+        M[1, 2] += dp[5]
         
         if np.linalg.norm(dp) <= threshold:
             break
-
-    M = np.array([[1.0 + p[0], p[1], p[2]],
-                [p[3], 1.0 + p[4], p[5]],
-                [0, 0, 1]])
+        
     return M

@@ -30,10 +30,10 @@ def SubtractDominantMotion(image1, image2, threshold, num_iters, tolerance):
     # Iw1 = affine_transform(image1, matrix=M[:2,:2], 
     #                        offset=M[:2, 2], output_shape=image2.shape)
     d_ = abs(image2 - Iw1)
-    mask[d_ > tolerance] = 0
+    mask[d_ < tolerance] = 0
     
-    # TODO: fix -- requires really low tolerance values
-    mask = binary_erosion(mask, structure=np.array(([0,1,0],[1,1,1],[0,1,0])))
-    mask = binary_dilation(mask, structure=np.array(([0,1,0],[1,1,1],[0,1,0])))
+    # TODO: fix -- 
+    # mask = binary_erosion(mask, structure=np.array(([0,1,0],[1,1,1],[0,1,0])))
+    # mask = binary_dilation(mask, structure=np.array(([0,1,0],[1,1,1],[0,1,0])))
     # mask = binary_dilation(mask, iterations=1)              
     return mask

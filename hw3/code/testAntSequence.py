@@ -35,6 +35,9 @@ capture = [0, 1, 30, 60, 90, 120]
 
 for i in range(seq.shape[2]-1):
     
+    if i not in capture:
+        continue
+    
     mask = SDM(seq[:, :, i], seq[:, :, i+1], threshold, num_iters, tolerance)
     
     if i in capture:
