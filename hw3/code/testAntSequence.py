@@ -7,8 +7,12 @@ import os
 from SubtractDominantMotion import SubtractDominantMotion as SDM
 from LucasKanadeAffine import LucasKanadeAffine as LKA
 
-OUT_DIR = "../out/q2"
+OUT_DIR = "../out/q2-ant"
 if not os.path.exists(OUT_DIR):
+    os.makedirs(OUT_DIR)
+else:
+    import shutil
+    shutil.rmtree(OUT_DIR)
     os.makedirs(OUT_DIR)
 
 fig = plt.figure()
