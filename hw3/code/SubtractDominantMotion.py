@@ -7,6 +7,7 @@ from scipy.ndimage import (
 import cv2 
 
 from LucasKanadeAffine import LucasKanadeAffine as LKA
+from InverseCompositionAffine import InverseCompositionAffine as ICA
 
 def SubtractDominantMotion(image1, image2, threshold, num_iters, tolerance):
     """
@@ -21,7 +22,13 @@ def SubtractDominantMotion(image1, image2, threshold, num_iters, tolerance):
     # put your implementation here
     mask = np.ones(image1.shape, dtype=bool)
 
-    M = LKA(image1, image2, threshold, num_iters)
+    # Lucas-Kanade Affine
+    # M = LKA(image1, image2, threshold, num_iters)
+    
+    # Inverse Composition Affine
+    M = ICA(image1, image2, threshold, num_iters)
+    
+    
     M = np.linalg.inv(M)
     
     # Match It to It1

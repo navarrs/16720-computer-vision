@@ -10,7 +10,6 @@ def LucasKanadeAffine(It, It1, threshold, num_iters):
     :return: M: the Affine warp matrix [3x3 numpy array] put your implementation here
     """
     M = np.eye(3)
-    p = np.zeros(6)
     
     H, W = It.shape[0], It.shape[1]
     x_, y_ = np.arange(W), np.arange(H)
@@ -51,8 +50,9 @@ def LucasKanadeAffine(It, It1, threshold, num_iters):
         Y = dI * y_
         A = np.vstack((X[0], Y[0], dI[0], 
                        X[1], Y[1], dI[1])).T
-    
-        dp = np.linalg.pinv(A) @ b
+
+        H = A.T @ A
+        dp = np.linalg.pinv(H) @ A.T @ b
         # print(np.linalg.norm(dp))
         
         M[0, 0] += dp[0]

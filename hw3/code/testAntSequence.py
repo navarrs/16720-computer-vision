@@ -7,7 +7,7 @@ import os
 from SubtractDominantMotion import SubtractDominantMotion as SDM
 from LucasKanadeAffine import LucasKanadeAffine as LKA
 
-OUT_DIR = "../out/q2-ant"
+OUT_DIR = "../out/q2-ant-ica"
 if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
 else:
