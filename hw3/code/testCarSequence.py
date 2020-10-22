@@ -18,7 +18,7 @@ args = parser.parse_args()
 num_iters = args.num_iters
 threshold = args.threshold
 
-OUT_DIR = "../out/q1-3"
+OUT_DIR = "../out/q1-3_carseq"
 if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
 
@@ -44,7 +44,7 @@ for i in range(seq.shape[2]-1):
     rect[2] += p[0]
     rect[3] += p[1]
     
-    # Save images falling in this condition
+    # Save the frames in the capture array
     if i in capture:
         w = rect[2] - rect[0]
         h = rect[3] - rect[1]
@@ -75,7 +75,7 @@ if args.visualize:
         w = rect[2] - rect[0]
         h = rect[3] - rect[1]
         r = plt.Rectangle((rect[0], rect[1]),
-                          height=h, width=w, ec='b', lw=2, fill=False)
+                          height=h, width=w, ec='b', lw=3, fill=False)
         ax.add_patch(r)
         plt.imshow(seq[:, :, i], cmap='gray')
         plt.pause(0.01)

@@ -29,6 +29,7 @@ def LucasKanadeAffine(It, It1, threshold, num_iters):
     for i in range(int(num_iters)):
         
         c = M @ C
+       
         # Mask valid points
         mask = (c[0] >= 0) & (c[1] >= 0) & (c[0] < W) & (c[1] <= H)
         x_, y_ = x[mask], y[mask]
@@ -51,8 +52,9 @@ def LucasKanadeAffine(It, It1, threshold, num_iters):
         A = np.vstack((X[0], Y[0], dI[0], 
                        X[1], Y[1], dI[1])).T
 
-        H = A.T @ A
-        dp = np.linalg.pinv(H) @ A.T @ b
+        Hinv = np.linalg.pinv(A.T @ A)
+        dp = Hinv @ A.T @ b
+        # dp = np.linalg.pinv(A) @ b
         # print(np.linalg.norm(dp))
         
         M[0, 0] += dp[0]

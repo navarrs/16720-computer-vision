@@ -6,7 +6,7 @@ import os
 
 from LucasKanade import LucasKanade as LK
 
-OUT_DIR = "../out/q1-3"
+OUT_DIR = "../out/q1-3_girlseq"
 if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
 

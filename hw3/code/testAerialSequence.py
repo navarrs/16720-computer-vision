@@ -9,7 +9,8 @@ import os
 from SubtractDominantMotion import SubtractDominantMotion as SDM
 from LucasKanadeAffine import LucasKanadeAffine as LKA
 
-OUT_DIR = "../out/q2-air-ica"
+OUT_DIR = "../out/q2_air"
+# OUT_DIR = "../out/q3_air"
 if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
 else:

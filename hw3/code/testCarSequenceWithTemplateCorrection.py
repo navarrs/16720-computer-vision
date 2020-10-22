@@ -22,17 +22,18 @@ template_threshold = args.template_threshold
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 
-OUT_DIR = "../out/q1-4"
+OUT_DIR = "../out/q1-4_carseq"
 if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
 
-with open("../out/q1-3" + "/carseqrects.npy", 'rb') as f:
+with open("../out/q1-3_carseq/carseqrects.npy", 'rb') as f:
     carseqrects = np.load(f)
 
 #
 # MAIN ------------
 seq = np.load("../data/carseq.npy")
 car_rects = np.zeros((seq.shape[2], 4))
+capture = [1, 100, 200, 300, 400]
 
 T0 = seq[:, :, 0]
 rect0 = [59., 116., 145., 151.]
@@ -76,7 +77,7 @@ for i in range(1, seq.shape[2]):
     car_rects[i, :] = rect
 
     # Save images falling in this condition
-    if i == 1 or i % 100 == 0:
+    if i in capture:
         w = rect[2] - rect[0]
         h = rect[3] - rect[1]
         tcr = plt.Rectangle((rect[0], rect[1]),
@@ -102,7 +103,8 @@ plt.close()
 with open(OUT_DIR + "/carseqrects-wcrt.npy", "wb") as f:
     np.save(f, car_rects)
 
-
+#
+# SANITY CHECK -----------------------------------------------------------------
 if args.visualize:
     with open(OUT_DIR + "/carseqrects-wcrt.npy", 'rb') as f:
         tc_rects = np.load(f)
@@ -123,7 +125,6 @@ if args.visualize:
         r = plt.Rectangle((rect[0], rect[1]),
                           height=h, width=w, ec='b', lw=2, fill=False)
         ax.add_patch(r)
-
         plt.imshow(seq[:, :, i], cmap='gray')
         plt.pause(0.01)
         plt.draw()
