@@ -6,6 +6,10 @@ import os
 
 from LucasKanade import LucasKanade as LK
 
+# OUT_DIR = "../out/q1-3_carseq"
+# if not os.path.exists(OUT_DIR):
+#     os.makedirs(OUT_DIR)
+    
 #
 # PARSING ----------------------------------------------------------------------
 parser = argparse.ArgumentParser()
@@ -18,10 +22,6 @@ args = parser.parse_args()
 num_iters = args.num_iters
 threshold = args.threshold
 
-OUT_DIR = "../out/q1-3_carseq"
-if not os.path.exists(OUT_DIR):
-    os.makedirs(OUT_DIR)
-
 # 
 # MAIN -------------------------------------------------------------------------
 seq = np.load("../data/carseq.npy")
@@ -30,6 +30,7 @@ capture = [1, 100, 200, 300, 400]
 car_rects = np.zeros((seq.shape[2], 4))
 
 fig = plt.figure()
+plt.axis('off')
 ax = fig.add_subplot(1, 1, 1)
 for i in range(seq.shape[2]-1):
 
@@ -55,17 +56,25 @@ for i in range(seq.shape[2]-1):
         ax.add_patch(r)
         plt.pause(0.2)
         plt.draw()
-        plt.savefig(OUT_DIR + f"/carseq_{i}.png")
+        # plt.savefig(OUT_DIR + f"/carseq_{i}.png", 
+        #             bbox_inches='tight', pad_inches=0)
+        plt.savefig("1-3_carseq_{i}.png", 
+                    bbox_inches='tight', pad_inches=0)
         r.remove()
 plt.close()
 
-with open(OUT_DIR + "/carseqrects.npy", "wb") as f:
+# with open(OUT_DIR + "/carseqrects.npy", "wb") as f:
+#     np.save(f, car_rects)
+
+with open("carseqrects.npy", "wb") as f:
     np.save(f, car_rects)
 
 #
 # SANITY CHECK -----------------------------------------------------------------
 if args.visualize:
-    with open(OUT_DIR + "/carseqrects.npy", 'rb') as f:
+    # with open(OUT_DIR + "/carseqrects.npy", 'rb') as f:
+    #     rects = np.load(f)
+    with open("carseqrects.npy", 'rb') as f:
         rects = np.load(f)
 
     fig = plt.figure()

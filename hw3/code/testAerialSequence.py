@@ -9,14 +9,14 @@ import os
 from SubtractDominantMotion import SubtractDominantMotion as SDM
 from LucasKanadeAffine import LucasKanadeAffine as LKA
 
-OUT_DIR = "../out/q2_air"
-# OUT_DIR = "../out/q3_air"
-if not os.path.exists(OUT_DIR):
-    os.makedirs(OUT_DIR)
-else:
-    import shutil
-    shutil.rmtree(OUT_DIR)
-    os.makedirs(OUT_DIR)
+# OUT_DIR = "../out/q2-air"
+# OUT_DIR = "../out/q3-air"
+# if not os.path.exists(OUT_DIR):
+#     os.makedirs(OUT_DIR)
+# else:
+#     import shutil
+#     shutil.rmtree(OUT_DIR)
+#     os.makedirs(OUT_DIR)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--num_iters', type=int, default=1e3, 
@@ -33,8 +33,6 @@ tolerance = args.tolerance
 seq = np.load('../data/aerialseq.npy')
 capture = [0, 1, 30, 60, 90, 120]
 
-# M = LKA(seq[:, :, 0], seq[:, :, 1], threshold, num_iters)
-
 for i in range(seq.shape[2]-1):
     
     if i not in capture:
@@ -43,11 +41,13 @@ for i in range(seq.shape[2]-1):
     mask = SDM(seq[:, :, i], seq[:, :, i+1], threshold, num_iters, tolerance)
     
     if i in capture:
+        plt.axis('off')
         plt.imshow(seq[:, :, i], cmap='gray')
         
         scatt = np.where(mask == True)
-        plt.scatter(scatt[1], scatt[0], s=2, c='b', alpha=0.5)
+        plt.scatter(scatt[1], scatt[0], s=1, c='r', alpha=0.5)
         
-        plt.savefig(OUT_DIR + f"/aerialseq_{i}.png")
+        plt.savefig(OUT_DIR + f"/aerialseq_{i}.png",
+                    bbox_inches='tight', pad_inches=0)
 
-plt.close()
+        plt.close()

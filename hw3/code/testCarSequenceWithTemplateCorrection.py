@@ -21,6 +21,7 @@ template_threshold = args.template_threshold
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
+plt.axis('off')
 
 OUT_DIR = "../out/q1-4_carseq"
 if not os.path.exists(OUT_DIR):
@@ -94,7 +95,8 @@ for i in range(1, seq.shape[2]):
         ax.add_patch(tcr)
         plt.pause(0.2)
         plt.draw()
-        plt.savefig(OUT_DIR + f"/carseqwcrt_{i}.png")
+        plt.savefig(OUT_DIR + f"/carseqwcrt_{i}.png",
+                    bbox_inches='tight', pad_inches=0)
         r.remove()
         tcr.remove()
 

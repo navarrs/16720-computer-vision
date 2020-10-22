@@ -6,9 +6,9 @@ import os
 
 from LucasKanade import LucasKanade as LK
 
-OUT_DIR = "../out/q1-3_girlseq"
-if not os.path.exists(OUT_DIR):
-    os.makedirs(OUT_DIR)
+# OUT_DIR = "../out/q1-3_girlseq"
+# if not os.path.exists(OUT_DIR):
+#     os.makedirs(OUT_DIR)
 
 #
 # PARSING ----------------------------------------------------------------------
@@ -31,6 +31,7 @@ girl_rects = np.zeros((seq.shape[2], 4))
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
+plt.axis('off')
 for i in range(seq.shape[2]-1):
 
     girl_rects[i, ] = rect
@@ -44,7 +45,7 @@ for i in range(seq.shape[2]-1):
     rect[2] += p[0]
     rect[3] += p[1]
 
-    # Save images falling in this condition
+    # Save the frames in the capture array
     if i in capture:
         w = rect[2] - rect[0]
         h = rect[3] - rect[1]
@@ -55,18 +56,26 @@ for i in range(seq.shape[2]-1):
         ax.add_patch(r)
         plt.pause(0.2)
         plt.draw()
-        plt.savefig(OUT_DIR + f"/girlseq_{i}.png")
+        # plt.savefig(OUT_DIR + f"/girlseq_{i}.png",
+        #             bbox_inches='tight', pad_inches=0)
+        plt.savefig("1-3_girlseq_{i}.png",
+                    bbox_inches='tight', pad_inches=0)
         r.remove()
 plt.close()
 
-with open(OUT_DIR + "/girlseqrects.npy", "wb") as f:
+# with open(OUT_DIR + "/girlseqrects.npy", "wb") as f:
+#     np.save(f, girl_rects)
+    
+with open("girlseqrects.npy", "wb") as f:
     np.save(f, girl_rects)
 
 
 #
 # SANITY CHECK -----------------------------------------------------------------
 if args.visualize:
-    with open(OUT_DIR + "/girlseqrects.npy", 'rb') as f:
+    # with open(OUT_DIR + "/girlseqrects.npy", 'rb') as f:
+    #     rects = np.load(f)
+    with open("girlseqrects.npy", 'rb') as f:
         rects = np.load(f)
 
     fig = plt.figure()

@@ -9,9 +9,13 @@ def LucasKanadeAffine(It, It1, threshold, num_iters):
     :param num_iters: number of iterations of the optimization
     :return: M: the Affine warp matrix [3x3 numpy array] put your implementation here
     """
+    H, W = It.shape[0], It.shape[1]
+    
+    def valid(c):
+        return (c[0] >= 0) & (c[1] >= 0) & (c[0] < W) & (c[1] <= H)
+    
     M = np.eye(3)
     
-    H, W = It.shape[0], It.shape[1]
     x_, y_ = np.arange(W), np.arange(H)
     
     T = RectBivariateSpline(y_, x_, It)
@@ -27,11 +31,10 @@ def LucasKanadeAffine(It, It1, threshold, num_iters):
     C = np.vstack((x, y, np.ones((W*H))))
     
     for i in range(int(num_iters)):
-        
         c = M @ C
-       
+        
         # Mask valid points
-        mask = (c[0] >= 0) & (c[1] >= 0) & (c[0] < W) & (c[1] <= H)
+        mask = valid(c)
         x_, y_ = x[mask], y[mask]
         xw_, yw_ = c[0][mask], c[1][mask]
         
