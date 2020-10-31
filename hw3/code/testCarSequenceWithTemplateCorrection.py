@@ -23,11 +23,11 @@ fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 plt.axis('off')
 
-OUT_DIR = "../out/q1-4_carseq"
-if not os.path.exists(OUT_DIR):
-    os.makedirs(OUT_DIR)
+# OUT_DIR = "../result/q1-4_carseq"
+# if not os.path.exists(OUT_DIR):
+#     os.makedirs(OUT_DIR)
 
-with open("../out/q1-3_carseq/carseqrects.npy", 'rb') as f:
+with open("../result/carseqrects.npy", 'rb') as f:
     carseqrects = np.load(f)
 
 #
@@ -95,20 +95,20 @@ for i in range(1, seq.shape[2]):
         ax.add_patch(tcr)
         plt.pause(0.2)
         plt.draw()
-        plt.savefig(OUT_DIR + f"/carseqwcrt_{i}.png",
+        plt.savefig(f"../result/carseqwcrt_{i}.png",
                     bbox_inches='tight', pad_inches=0)
         r.remove()
         tcr.remove()
 
 plt.close()
 
-with open(OUT_DIR + "/carseqrects-wcrt.npy", "wb") as f:
+with open("../result/carseqrects-wcrt.npy", "wb") as f:
     np.save(f, car_rects)
 
 #
 # SANITY CHECK -----------------------------------------------------------------
 if args.visualize:
-    with open(OUT_DIR + "/carseqrects-wcrt.npy", 'rb') as f:
+    with open("../result/carseqrects-wcrt.npy", 'rb') as f:
         tc_rects = np.load(f)
 
     fig = plt.figure()

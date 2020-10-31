@@ -23,11 +23,11 @@ fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 plt.axis('off')
 
-OUT_DIR = "../out/q1-4_girlseq"
-if not os.path.exists(OUT_DIR):
-    os.makedirs(OUT_DIR)
+# OUT_DIR = "../result/q1-4_girlseq"
+# if not os.path.exists(OUT_DIR):
+#     os.makedirs(OUT_DIR)
 
-with open("../out/q1-3_girlseq/girlseqrects.npy", 'rb') as f:
+with open("../result/girlseqrects.npy", 'rb') as f:
     girlseqrects = np.load(f)
 
 #
@@ -93,19 +93,20 @@ for i in range(1, seq.shape[2]-1):
         ax.add_patch(tcr)
         plt.pause(0.2)
         plt.draw()
-        plt.savefig(OUT_DIR + f"/girlseqwcrt_{i}.png",
+        plt.savefig(f"../result/girlseqwcrt_{i}.png",
                     bbox_inches='tight', pad_inches=0)
         r.remove()
         tcr.remove()
 
 plt.close()
 
-with open(OUT_DIR + "/girlseqrects-wcrt.npy", "wb") as f:
+with open("../result/girlseqrects-wcrt.npy", "wb") as f:
     np.save(f, girl_rects)
 
-
+#
+# SANITY CHECK -----------------------------------------------------------------
 if args.visualize:
-    with open(OUT_DIR + "/girlseqrects-wcrt.npy", 'rb') as f:
+    with open("girlseqrects-wcrt.npy", 'rb') as f:
         tc_rects = np.load(f)
 
     fig = plt.figure()

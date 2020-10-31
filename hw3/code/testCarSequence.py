@@ -6,7 +6,7 @@ import os
 
 from LucasKanade import LucasKanade as LK
 
-# OUT_DIR = "../out/q1-3_carseq"
+# OUT_DIR = "../result/q1-3_carseq"
 # if not os.path.exists(OUT_DIR):
 #     os.makedirs(OUT_DIR)
     
@@ -58,7 +58,7 @@ for i in range(seq.shape[2]-1):
         plt.draw()
         # plt.savefig(OUT_DIR + f"/carseq_{i}.png", 
         #             bbox_inches='tight', pad_inches=0)
-        plt.savefig("1-3_carseq_{i}.png", 
+        plt.savefig(f"../result/1-3_carseq_{i}.png", 
                     bbox_inches='tight', pad_inches=0)
         r.remove()
 plt.close()
@@ -66,7 +66,7 @@ plt.close()
 # with open(OUT_DIR + "/carseqrects.npy", "wb") as f:
 #     np.save(f, car_rects)
 
-with open("carseqrects.npy", "wb") as f:
+with open("../result/carseqrects.npy", "wb") as f:
     np.save(f, car_rects)
 
 #

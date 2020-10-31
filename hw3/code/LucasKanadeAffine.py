@@ -12,7 +12,7 @@ def LucasKanadeAffine(It, It1, threshold, num_iters):
     H, W = It.shape[0], It.shape[1]
     
     def valid(c):
-        return (c[0] >= 0) & (c[1] >= 0) & (c[0] < W) & (c[1] <= H)
+        return np.where((c[0] >= 0) & (c[1] >= 0) & (c[0] < W) & (c[1] <= H))
     
     M = np.eye(3)
     

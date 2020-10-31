@@ -2,8 +2,6 @@ import numpy as np
 from scipy.ndimage import (
     binary_erosion, 
     binary_dilation, 
-    binary_fill_holes,
-    binary_propagation,
     affine_transform
     )
 
@@ -24,10 +22,10 @@ def SubtractDominantMotion(image1, image2, threshold, num_iters, tolerance):
     mask = np.ones(image1.shape, dtype=bool)
 
     # Lucas-Kanade Affine
-    M = LKA(image1, image2, threshold, num_iters)
+    # M = LKA(image1, image2, threshold, num_iters)
     
     # Inverse Composition Affine
-    # M = ICA(image1, image2, threshold, num_iters)
+    M = ICA(image1, image2, threshold, num_iters)
     
     M = np.linalg.inv(M)
     
@@ -37,14 +35,13 @@ def SubtractDominantMotion(image1, image2, threshold, num_iters, tolerance):
     d_ = abs(image2 - Iw1)
     mask[d_ < tolerance] = 0
     
-    # TODO: fix -- 
+    # TODO: improve -- 
     mask = binary_dilation(mask, 
                            structure=np.array(([0,1,0],[1,1,1],[0,1,0])), 
                            iterations=2)
     mask = binary_erosion(mask, 
                           structure=np.array(([0,1,0],[1,1,1],[0,1,0])),
                           iterations=2)
-
     # mask = binary_dilation(mask, iterations=1)       
     # mask = binary_erosion(mask, iterations=1)              
     return mask

@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
-import numpy.matlib
 
 def LucasKanade(It, It1, rect, threshold, num_iters, p0=np.zeros(2)):
     """
@@ -12,7 +11,7 @@ def LucasKanade(It, It1, rect, threshold, num_iters, p0=np.zeros(2)):
     :param p0: Initial movement vector [dp_x0, dp_y0]
     :return: p: movement vector [dp_x, dp_y]
     """
-    assert It.shape == It1.shape, "Frames are different in shape"
+    # assert It.shape == It1.shape, "Frames are different in shape"
     p = p0
 
     # create mesh of rect 
@@ -45,7 +44,7 @@ def LucasKanade(It, It1, rect, threshold, num_iters, p0=np.zeros(2)):
         dI[:, 1] = I.ev(Yr + p[1], Xr + p[0], dx = 1).ravel()
         
         # dIdW
-        A = dI @ dWdp # not really required since dWdp is an identity matrix?
+        A = dI @ dWdp # not really required since dWdp is an identity matrix in this case?
         H = A.T @ A 
         dp = np.linalg.inv(H) @ (A.T) @ b
         

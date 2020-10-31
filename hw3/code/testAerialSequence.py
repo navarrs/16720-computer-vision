@@ -2,9 +2,8 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
-# write your script here, we recommend the above libraries for making your animation
 import os
+
 # write your script here, we recommend the above libraries for making your animation
 from SubtractDominantMotion import SubtractDominantMotion as SDM
 from LucasKanadeAffine import LucasKanadeAffine as LKA
@@ -43,11 +42,8 @@ for i in range(seq.shape[2]-1):
     if i in capture:
         plt.axis('off')
         plt.imshow(seq[:, :, i], cmap='gray')
-        
         scatt = np.where(mask == True)
         plt.scatter(scatt[1], scatt[0], s=1, c='r', alpha=0.5)
-        
-        plt.savefig(OUT_DIR + f"/aerialseq_{i}.png",
+        plt.savefig(f"aerialseq_{i}.png",
                     bbox_inches='tight', pad_inches=0)
-
         plt.close()

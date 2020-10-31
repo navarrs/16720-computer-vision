@@ -40,20 +40,21 @@ def InverseCompositionAffine(It, It1, threshold, num_iters):
     # print(Hinv_A.shape)
     
     for i in range(int(num_iters)):
-        
+        # Iw
         c = M @ C
-        
         Iw = I.ev(c[1], c[0])
+        
+        # err 
         b = (Iw - T_).reshape(-1, 1)
         
+        # dp
         dp = np.dot(Hinv_AT, b)
         # print(dp)
-        
         dM = np.array([[1.+dp[0], dp[1], dp[2]], 
                        [dp[3], 1.+dp[4], dp[5]],
                        [0., 0., 1.]], dtype=np.float)
-        
         M = M @ np.linalg.pinv(dM)
+        # print(M)
         
         if np.linalg.norm(dp) <= threshold:
             break
