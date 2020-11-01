@@ -64,8 +64,7 @@ Q3.1: Compute the essential matrix E.
     Output: E, the essential matrix
 '''
 def essentialMatrix(F, K1, K2):
-    # Replace pass by your implementation
-    pass
+    return K2.T @ F @ K1
 
 
 '''
@@ -78,8 +77,54 @@ Q3.2: Triangulate a set of 2D coordinates in the image to a set of 3D points.
             err, the reprojection error.
 '''
 def triangulate(C1, pts1, C2, pts2):
-    # Replace pass by your implementation
-    pass
+    N = len(pts1)
+    # Homogeneous coordinates
+    pts1h = np.c_[pts1, np.ones(N)]
+    pts2h = np.c_[pts2, np.ones(N)]
+    
+    A = np.zeros((4, 4), dtype=np.float)
+    X = np.zeros((N, 4), dtype=np.float)
+    pts1_rep = np.zeros((N, 3), dtype=np.float)
+    pts2_rep = np.zeros((N, 3), dtype=np.float)
+    
+    # Compute the 3D points
+    for i in range(N):
+        p1 = pts1h[i]
+        P1 = np.array([[0, -p1[2], p1[1]], 
+                       [p1[2], 0, -p1[0]], 
+                       [-p1[1], p1[0], 0]], dtype=np.float)
+        p2 = pts2h[i]
+        P2 = np.array([[0, -p2[2], p2[1]], 
+                       [p2[2], 0, -p2[0]], 
+                       [-p2[1], p2[0], 0]], dtype=np.float)
+        
+        
+        A1 = P1 @ C1
+        A2 = P2 @ C2
+        
+        A[:2, :] = A1[:2, :]
+        A[2:, :] = A2[:2, :]
+        
+        _,_,V_T = np.linalg.svd(A)
+        X[i, :] = V_T[-1, :]
+        
+        # Reproject to 2D
+        pts1_rep[i] = C1 @ X[i]
+        pts1_rep[i, :] = pts1_rep[i, :] / pts1_rep[i, -1]
+        pts2_rep[i] = C2 @ X[i]
+        pts2_rep[i, :] = pts2_rep[i, :] / pts2_rep[i, -1]
+        # print(pts1_rep[i], pts2_rep[i])
+        
+        X[i, :] = X[i, :] / X[i, -1]
+        # print(X[i, :])
+        
+    # Measure reprojection error
+    err1 = np.linalg.norm(pts1h - pts1_rep, ord=2)
+    err2 = np.linalg.norm(pts2h - pts2_rep, ord=2)
+    err = err1 + err2
+    # print(err)
+
+    return X[:, :-1], err
 
 
 '''
