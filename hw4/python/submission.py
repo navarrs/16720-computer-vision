@@ -93,13 +93,12 @@ def triangulate(C1, pts1, C2, pts2):
         P1 = np.array([[0, -p1[2], p1[1]], 
                        [p1[2], 0, -p1[0]], 
                        [-p1[1], p1[0], 0]], dtype=np.float)
+        A1 = P1 @ C1
+        
         p2 = pts2h[i]
         P2 = np.array([[0, -p2[2], p2[1]], 
                        [p2[2], 0, -p2[0]], 
                        [-p2[1], p2[0], 0]], dtype=np.float)
-        
-        
-        A1 = P1 @ C1
         A2 = P2 @ C2
         
         A[:2, :] = A1[:2, :]
@@ -119,11 +118,10 @@ def triangulate(C1, pts1, C2, pts2):
         # print(X[i, :])
         
     # Measure reprojection error
-    err1 = np.linalg.norm(pts1h - pts1_rep, ord=2)
-    err2 = np.linalg.norm(pts2h - pts2_rep, ord=2)
-    err = err1 + err2
+    err1 = (pts1h - pts1_rep)**2
+    err2 = (pts2h - pts2_rep)**2
+    err = np.sum(err1) + np.sum(err2)
     # print(err)
-
     return X[:, :-1], err
 
 
