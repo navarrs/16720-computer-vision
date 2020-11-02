@@ -150,9 +150,17 @@ def epipolarMatchGUI(I1, I2, F):
     ax2.set_title('Verify that the corresponding point \n is on the epipolar line in this image')
     ax2.set_axis_off()
 
+    pts1 = []
+    pts2 = []
     while True:
         plt.sca(ax1)
-        x, y = plt.ginput(1, mouse_stop=2)[0]
+        # x, y = plt.ginput(1, mouse_stop=2)[0]
+        p = plt.ginput(1, mouse_stop=2)
+        if len(p) < 1:
+            break
+        
+        x, y = p[0][0], p[0][1]
+        pts1.append([x, y])
 
         xc = int(x)
         yc = int(y)
@@ -182,5 +190,13 @@ def epipolarMatchGUI(I1, I2, F):
 
         # draw points
         x2, y2 = sub.epipolarCorrespondence(I1, I2, F, xc, yc)
+        pts2.append([x2, y2])
         ax2.plot(x2, y2, 'ro', MarkerSize=8, linewidth=2)
         plt.draw()
+    
+    plt.close()
+    
+    # q4_1_file = "../out/q4_1.npz"
+    # np.savez(q4_1_file, F=F, pts1=pts1, pts2=pts2)
+    # print(pts1, pts2)
+    

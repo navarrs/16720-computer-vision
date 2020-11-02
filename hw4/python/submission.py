@@ -119,7 +119,7 @@ def triangulate(C1, pts1, C2, pts2):
         
     # Measure reprojection error
     err1 = (pts1h - pts1_rep)**2
-    print(pts1h, pts1_rep)
+    # print(pts1h, pts1_rep)
     
     err2 = (pts2h - pts2_rep)**2
     err = np.sum(err1) + np.sum(err2)
@@ -151,7 +151,8 @@ def epipolarCorrespondence(im1, im2, F, x1, y1):
         return G
     
     H, W, _ = im1.shape
-    w = 3
+    w = 5
+    N = 20
     
     # Homogeneous coord
     p = np.array([x1, y1, 1]).T
@@ -164,7 +165,7 @@ def epipolarCorrespondence(im1, im2, F, x1, y1):
         print("Invalid line")
         return 
     
-    y_ = np.arange(w, H-w)
+    y_ = np.arange(y1-N, y1+N)
     x_ = -(line[1] * y_  + line[2]) / line[0]
     # print(x_)
     
