@@ -119,6 +119,8 @@ def triangulate(C1, pts1, C2, pts2):
         
     # Measure reprojection error
     err1 = (pts1h - pts1_rep)**2
+    print(pts1h, pts1_rep)
+    
     err2 = (pts2h - pts2_rep)**2
     err = np.sum(err1) + np.sum(err2)
     # print(err)
@@ -137,8 +139,51 @@ Q4.1: 3D visualization of the temple images.
 
 '''
 def epipolarCorrespondence(im1, im2, F, x1, y1):
-    # Replace pass by your implementation
-    pass
+    def gauss(l=3, sig=1., channels=3):
+        G = np.zeros((l, l, channels))
+        k = np.linspace(-(l - 1) / 2., (l - 1) / 2., l)
+        X, Y = np.meshgrid(k, k)
+        kernel = np.exp(-0.5 * (np.square(X) + np.square(Y)) / np.square(sig))
+        kernel = kernel / np.sum(kernel)
+        G[:, :, 0] = kernel
+        G[:, :, 1] = kernel
+        G[:, :, 2] = kernel
+        return G
+    
+    H, W, _ = im1.shape
+    w = 3
+    
+    # Homogeneous coord
+    p = np.array([x1, y1, 1]).T
+    
+    # line = ax + by + c
+    line = F @ p
+    n = np.sqrt(line[0]**2 + line[1]**2)
+    line /= n
+    if np.isclose(n, 0):
+        print("Invalid line")
+        return 
+    
+    y_ = np.arange(w, H-w)
+    x_ = -(line[1] * y_  + line[2]) / line[0]
+    # print(x_)
+    
+    # Search on line
+    kernel = gauss(2*w)
+    im1_patch = np.multiply(kernel, im1[y1-w:y1+w, x1-w:x1+w])
+    x2, y2 = 0, 0
+    diff = np.inf
+    for i in range(len(y_)):
+        x, y = int(x_[i]), int(y_[i])
+        if (x - w < 0) or (x + w > W):
+            continue
+        im2_patch = np.multiply(kernel, im2[y-w:y+w, x-w:x+w])
+        
+        d = np.sqrt(np.sum((im2_patch - im1_patch)**2))
+        if diff > d:
+            x2, y2 = x, y
+            diff = d 
+    return x2, y2
 
 '''
 Q5.1: Extra Credit RANSAC method.

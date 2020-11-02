@@ -42,7 +42,7 @@ with np.load("../data/intrinsics.npz") as data:
     K2 = data['K2']
     
 E_file = os.path.join(OUTDIR, "E.npz")
-if os.path.exists(F_file):
+if os.path.exists(E_file):
     with np.load(E_file, allow_pickle=True) as data:  
         E = data['E']
 else:
