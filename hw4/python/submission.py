@@ -6,6 +6,7 @@ Replace 'pass' by your implementation.
 # Insert your package here
 import numpy as np
 from util import refineF
+import random
 
 '''
 Q2.1: Eight Point Algorithm
@@ -195,17 +196,59 @@ Q5.1: Extra Credit RANSAC method.
             inliers, Nx1 bool vector set to true for inliers
 '''
 def ransacF(pts1, pts2, M, nIters=1000, tol=0.42):
-    # Replace pass by your implementation
-    pass
-
+    N = len(pts1)
+    best_inliers = 0
+    max_inliers = 0
+    
+    pts1h = np.c_[pts1, np.ones(N)]
+    pts2h = np.c_[pts2, np.ones(N)]
+    for i in range(nIters):
+        # Get samples
+        samples = random.sample(range(N), 8)
+        p1 = pts1[samples]
+        p2 = pts2[samples]
+        
+        # Inlier counter 
+        inliers = np.zeros(N, dtype=np.bool)
+        inliers[samples] = True
+        
+        # Compute the fundamental matrix
+        F = eightpoint(p1, p2, M)
+        
+        # Inliers
+        for j in range(N):
+            p1 = pts1h[j]
+            p2 = pts2h[j]
+            if abs(p2 @ F @ p1.T) < tol:
+                inliers[j] = True
+        
+        inlier_count = np.sum(inliers)
+        if inlier_count > max_inliers:
+            max_inliers = inlier_count
+            best_inliers = inliers
+    
+    p1 = pts1[best_inliers == True]
+    p2 = pts2[best_inliers == True]
+    F  = eightpoint(p1, p2, M)
+    return F, best_inliers.reshape(N, 1)
+        
 '''
 Q5.2:Extra Credit  Rodrigues formula.
     Input:  r, a 3x1 vector
     Output: R, a rotation matrix
 '''
 def rodrigues(r):
-    # Replace pass by your implementation
-    pass
+    theta = np.linalg.norm(r)
+    I = np.identity(3, dtype=np.float)
+    if np.isclose(theta, 0.0):
+        return I
+    u = r / theta
+    ux = np.array([[0., -u[2], u[1]],
+                   [u[2], 0., -u[0]],
+                   [-u[1], u[0], 0.]], dtype=np.float)
+    ctheta = np.cos(theta)
+    stheta = np.sin(theta)
+    return ctheta * I + (1 - ctheta) * np.dot(u, u.T) + stheta * ux 
 
 '''
 Q5.2:Extra Credit  Inverse Rodrigues formula.
@@ -213,9 +256,39 @@ Q5.2:Extra Credit  Inverse Rodrigues formula.
     Output: r, a 3x1 vector
 '''
 def invRodrigues(R):
-    # Replace pass by your implementation
-    pass
-
+    def S(r):
+        if (np.linalg.norm(r) 
+            and (r[0] == r[1] == 0.0 and r[2] < 0)
+            or  (r[0] == 0.0 and r[1] < 0.0)
+            or  (r[0] < 0.0)
+        ):
+            return -r
+        return r
+    
+    A = (R - R.T) / 2.0
+    rho = np.array([A[2, 1], A[0, 2], A[1, 0]]).T 
+    s = np.linalg.norm(rho)
+    c = (np.sum(np.diag(R)) - 1.0) / 2.0
+    
+    # if s = 0 and c = 1
+    if np.isclose(s, 0.0) and np.isclose(c, 1.0):
+        return np.zeros((3, 1), dtype=np.float)
+    
+    # if s = 0 and c = -1
+    for i in range(3):
+        v = (R + np.identity(3))[:, i]
+        if not np.allclose(v, 0.0):
+            break
+    u = v / np.linalg.norm(v)
+    r = S(np.pi * u)
+    theta = np.linalg.norm(r)
+    if not np.isclose(np.sin(theta), 0.0):
+        u = rho / s
+        theta = np.arctan2(s, c)
+        return theta * u
+    return r    
+            
+    
 '''
 Q5.3: Extra Credit Rodrigues residual.
     Input:  K1, the intrinsics of camera 1
