@@ -242,13 +242,16 @@ def rodrigues(r):
     I = np.identity(3, dtype=np.float)
     if np.isclose(theta, 0.0):
         return I
-    u = r / theta
+    u = (r / theta).reshape(3, 1)
     ux = np.array([[0., -u[2], u[1]],
                    [u[2], 0., -u[0]],
                    [-u[1], u[0], 0.]], dtype=np.float)
-    ctheta = np.cos(theta)
-    stheta = np.sin(theta)
-    return ctheta * I + (1 - ctheta) * np.dot(u, u.T) + stheta * ux 
+  
+    c = np.cos(theta)
+    s = np.sin(theta)
+    # print(c, s)
+    # print(u @ u.T)
+    return c * I + (1 - c) * (u @ u.T) + s * ux 
 
 '''
 Q5.2:Extra Credit  Inverse Rodrigues formula.
@@ -265,29 +268,31 @@ def invRodrigues(R):
             return -r
         return r
     
-    A = (R - R.T) / 2.0
-    rho = np.array([A[2, 1], A[0, 2], A[1, 0]]).T 
-    s = np.linalg.norm(rho)
-    c = (np.sum(np.diag(R)) - 1.0) / 2.0
+    if not np.allclose(abs(R @ R.T - np.identity(3)), 0.0):
+        print("Invalid rotation matrix")
+        return 
     
-    # if s = 0 and c = 1
-    if np.isclose(s, 0.0) and np.isclose(c, 1.0):
+    A = (R - R.T) / 2.0
+    a = np.array([A[2, 1], A[0, 2], A[1, 0]]).T 
+    
+    s = np.linalg.norm(a)
+    c = (np.sum(np.diag(R)) - 1.0) / 2.0
+    # print(s, c)
+    
+    if np.isclose(c, 1.0) and np.isclose(s, 0.0):
         return np.zeros((3, 1), dtype=np.float)
     
-    # if s = 0 and c = -1
-    for i in range(3):
-        v = (R + np.identity(3))[:, i]
-        if not np.allclose(v, 0.0):
-            break
-    u = v / np.linalg.norm(v)
-    r = S(np.pi * u)
-    theta = np.linalg.norm(r)
-    if not np.isclose(np.sin(theta), 0.0):
-        u = rho / s
-        theta = np.arctan2(s, c)
-        return theta * u
-    return r    
-            
+    if np.isclose(c, -1.0) and np.isclose(s, 0.0):    
+        for i in range(3):
+            v = (R + np.identity(3))[:, i]
+            if not np.allclose(v, 0.0):
+                break
+        u = v / np.linalg.norm(v)
+        return S(np.pi * u)
+    
+    u = a / s
+    theta = np.arctan2(s, c)
+    return theta * u      
     
 '''
 Q5.3: Extra Credit Rodrigues residual.
