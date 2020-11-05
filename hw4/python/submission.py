@@ -7,6 +7,7 @@ Replace 'pass' by your implementation.
 import numpy as np
 from util import refineF
 import random
+import scipy
 
 '''
 Q2.1: Eight Point Algorithm
@@ -152,8 +153,8 @@ def epipolarCorrespondence(im1, im2, F, x1, y1):
         return G
     
     H, W, _ = im1.shape
-    w = 5
-    N = 20
+    w = 15
+    N = 40
     
     # Homogeneous coord
     p = np.array([x1, y1, 1]).T
@@ -172,14 +173,14 @@ def epipolarCorrespondence(im1, im2, F, x1, y1):
     
     # Search on line
     kernel = gauss(2*w)
-    im1_patch = np.multiply(kernel, im1[y1-w:y1+w, x1-w:x1+w])
+    im1_patch = im1[y1-w:y1+w, x1-w:x1+w]# np.multiply(kernel, im1[y1-w:y1+w, x1-w:x1+w])
     x2, y2 = 0, 0
     diff = np.inf
     for i in range(len(y_)):
         x, y = int(x_[i]), int(y_[i])
         if (x - w < 0) or (x + w > W):
             continue
-        im2_patch = np.multiply(kernel, im2[y-w:y+w, x-w:x+w])
+        im2_patch = im2[y-w:y+w, x-w:x+w]#np.multiply(kernel, im2[y-w:y+w, x-w:x+w])
         
         d = np.sqrt(np.sum((im2_patch - im1_patch)**2))
         if diff > d:
@@ -305,8 +306,17 @@ Q5.3: Extra Credit Rodrigues residual.
     Output: residuals, 4N x 1 vector, the difference between original and estimated projections
 '''
 def rodriguesResidual(K1, M1, p1, K2, p2, x):
-    # Replace pass by your implementation
+    N = len(p1)
+    C1 = K1 @ M1
+    
+    r = x[N*3:N*3 + 3]
+    t = x[-3].reshape((3, 1))
+    M2 = np.hstack([rodrigues(r), t])
+    C2 = K2 @ M2
+    
     pass
+        
+    
 
 '''
 Q5.3 Extra Credit  Bundle adjustment.
@@ -321,5 +331,11 @@ Q5.3 Extra Credit  Bundle adjustment.
             P2, the optimized 3D coordinates of points
 '''
 def bundleAdjustment(K1, M1, p1, K2, M2_init, p2, P_init):
-    # Replace pass by your implementation
-    pass
+    P_init = np.vstack([P_init, invRodrigues(M2_init[:3, :3])])
+    P_init = np.vstack([P_init, M2_init[:3, -1]])
+    f = lambda x: (rodriguesResidual(K1, M1, p1, K2, p2, x)**2).sum()
+    res = scipy.optimize.leastsq(f, P_init)
+    M2 = np.zeros((3, 4))
+    M2[:3, :3] = rodrigues(res[-2:, :])
+    M2[:3,  3] = res[-1, :]
+    return M2, res[:-2, :]
