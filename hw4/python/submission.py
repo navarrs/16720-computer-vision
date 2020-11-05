@@ -231,7 +231,7 @@ def ransacF(pts1, pts2, M, nIters=1000, tol=0.42):
     p1 = pts1[best_inliers == True]
     p2 = pts2[best_inliers == True]
     F  = eightpoint(p1, p2, M)
-    return F, best_inliers.reshape(N, 1)
+    return F, best_inliers
         
 '''
 Q5.2:Extra Credit  Rodrigues formula.
@@ -310,14 +310,20 @@ def rodriguesResidual(K1, M1, p1, K2, p2, x):
     C1 = K1 @ M1
     
     r = x[N*3:N*3 + 3]
-    t = x[-3].reshape((3, 1))
+    t = x[-3:].reshape((3, 1))
     M2 = np.hstack([rodrigues(r), t])
     C2 = K2 @ M2
     
-    pass
+    X_h = x[:N*3].reshape(N, 3)
+    X_h = np.c_[X_h, np.ones(N)]
         
+    p1_hat = (C1 @ X_h.T).T
+    p1_hat = np.divide(p1_hat, p1_hat[:, -1].reshape(N, 1))[:, :-1]
+    p2_hat = (C2 @ X_h.T).T
+    p2_hat = np.divide(p2_hat, p2_hat[:, -1].reshape(N, 1))[:, :-1]
     
-
+    return np.concatenate([(p1-p1_hat).reshape([-1]), (p2-p2_hat).reshape([-1])])
+        
 '''
 Q5.3 Extra Credit  Bundle adjustment.
     Input:  K1, the intrinsics of camera 1
@@ -331,11 +337,18 @@ Q5.3 Extra Credit  Bundle adjustment.
             P2, the optimized 3D coordinates of points
 '''
 def bundleAdjustment(K1, M1, p1, K2, M2_init, p2, P_init):
+    N = len(p1)
+    t = M2_init[:3, -1].copy()
     P_init = np.vstack([P_init, invRodrigues(M2_init[:3, :3])])
-    P_init = np.vstack([P_init, M2_init[:3, -1]])
-    f = lambda x: (rodriguesResidual(K1, M1, p1, K2, p2, x)**2).sum()
+    P_init = np.vstack([P_init, t])
+    
+    f = lambda x: rodriguesResidual(K1, M1, p1, K2, p2, x)
     res = scipy.optimize.leastsq(f, P_init)
-    M2 = np.zeros((3, 4))
-    M2[:3, :3] = rodrigues(res[-2:, :])
-    M2[:3,  3] = res[-1, :]
-    return M2, res[:-2, :]
+    
+    R = rodrigues(res[0][N*3:N*3 + 3])
+    t = res[0][-3:].reshape((3, 1))
+    M2 = np.hstack([R, t])
+    
+    P2 = res[0][:N*3].reshape(N, 3)
+    return M2, P2
+    

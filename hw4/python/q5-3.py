@@ -8,12 +8,12 @@ from submission import (
     bundleAdjustment,
 )
 from helper import (
-    displayEpipolarF,
     camera2,
 )
 import numpy as np
 import cv2
 import os 
+import matplotlib.pyplot as plt
 
 OUTDIR = "../out/"
 DATADIR = "../data/"
@@ -29,7 +29,10 @@ with np.load("../data/some_corresp_noisy.npz") as data:
     pts1 = data['pts1']
     pts2 = data['pts2']
 
-F, intiers = ransacF(pts1=pts1, pts2=pts2, M=M, nIters=200, tol=0.001)
+F, inliers = ransacF(pts1=pts1, pts2=pts2, M=M, nIters=200, tol=0.001)
+pts1 = pts1[inliers]
+pts2 = pts2[inliers]
+
 print(f"F:\n{F}")
 
 # Get Cameras
@@ -50,6 +53,7 @@ for i in range(4):
     M2_init = M2s[:, :, i]
     C2 = K2 @ M2_init
     P_init, err = triangulate(C1=C1, pts1=pts1, C2=C2, pts2=pts2)
+    print(f"Err: {err}")
     
     # Valid solution would be the one where z is positive. Thus, the points 
     # are in front of both cameras. 
@@ -57,17 +61,20 @@ for i in range(4):
         print(f"M2_init found for i={i+1}:\n{M2_init}")
         break
 
+
 M2, P_opt = bundleAdjustment(K1=K1, M1=M1, p1=pts1, K2=K2, 
                              M2_init=M2_init, p2=pts2, P_init=P_init)
+print(f"M2_opt:\n{M2} P_opt: {P_opt.shape}")
 
 # Plot
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# ax.set_xlabel('X Label')
-# ax.set_ylabel('Y Label')
-# ax.set_zlabel('Z Label')
-# ax.set_title('Point cloud reconstruction')
-# ax.scatter(P_init[:, 0].tolist(), P_init[:, 1].tolist(), P_init[:, 2].tolist(), 'b')
-# ax.scatter(P_opt[:, 0].tolist(), P_opt[:, 1].tolist(), P_opt[:, 2].tolist(), 'r')
-# plt.show()
-# plt.close()
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+ax.set_zlabel('Z Label')
+ax.set_zlimit(3, 5)
+ax.set_title('Point cloud reconstruction')
+ax.scatter(P_init[:, 0].tolist(), P_init[:, 1].tolist(), P_init[:, 2].tolist(), 'b')
+ax.scatter(P_opt[:, 0].tolist(), P_opt[:, 1].tolist(), P_opt[:, 2].tolist(), 'r')
+plt.show()
+plt.close()
