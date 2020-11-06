@@ -196,7 +196,7 @@ def epipolarMatchGUI(I1, I2, F):
     
     plt.close()
     
-    # q4_1_file = "../out/q4_1.npz"
-    # np.savez(q4_1_file, F=F, pts1=pts1, pts2=pts2)
-    # print(pts1, pts2)
+    q4_1_file = "q4_1.npz"
+    np.savez(q4_1_file, F=F, pts1=pts1, pts2=pts2)
+    print(pts1, pts2)
     

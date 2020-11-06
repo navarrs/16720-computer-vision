@@ -19,20 +19,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os 
 
-OUTDIR = "../out"
-DATADIR = "../data"
-F_file = os.path.join(OUTDIR, "F.npz")
-E_file = os.path.join(OUTDIR, "E.npz")
-Q33_file = os.path.join(OUTDIR, "q3_3.npz")
+q2_1_file = "q2_1.npz"
+q3_1_file = "q3_1.npz"
+q3_3_file = "q3_3.npz"
+q4_2_file = "q4_2.npz"
 
-coords_file = os.path.join(DATADIR, "templeCoords.npz")
-K_file = os.path.join(DATADIR, "intrinsics.npz") 
-
+coords_file = "../data/templeCoords.npz"
+K_file = "../data/intrinsics.npz"
 I1 = cv2.imread("../data/im1.png")
 I2 = cv2.imread("../data/im2.png")
 
 # Get the fundamental matrix
-with np.load(F_file) as data:
+with np.load(q2_1_file) as data:
     F = data['F']
     print(f"F:\n{F}")
 
@@ -40,6 +38,7 @@ with np.load(F_file) as data:
 with np.load(coords_file) as data:
     x1 = data['x1']
     y1 = data['y1']
+    print(f"Reading {len(x1)} points")
     
 N = len(x1)
 x2 = np.zeros(x1.shape[0])
@@ -71,7 +70,10 @@ with np.load(K_file) as data:
     print(f"C1:\n{C1}")
     
 # Triangulate 
-E = essentialMatrix(F, K1, K2)
+with np.load(q3_1_file) as data:
+    E = data['E']
+    print(f"E:\n{E}")
+    
 M2s = camera2(E)
 for i in range(4):
     M2 = M2s[:, :, i]
@@ -84,7 +86,22 @@ for i in range(4):
         print(f"M2 found for i={i+1}")
         print(f"C1:\n{C1}\nC2:\n{C2}\nM2:\n{M2}")
         break
-    
+
+np.savez(q4_2_file, F=F, M1=M1, C1=C1, M2=M2, C2=C2)
+
+# sanity check
+with np.load(q4_2_file) as data:
+    F_ = data['F']
+    C1_ = data['C1']
+    M1_ = data['M1']
+    C2_ = data['C2']
+    M2_ = data['M2']
+    assert np.isclose(np.sum(abs(F-F_)), 0.0), "Not matched F"
+    assert np.isclose(np.sum(abs(C1-C1_)), 0.0), "Not matched C1"
+    assert np.isclose(np.sum(abs(M1-M1_)), 0.0), "Not matched M1"
+    assert np.isclose(np.sum(abs(C2-C2_)), 0.0), "Not matched C2"
+    assert np.isclose(np.sum(abs(M2-M2_)), 0.0), "Not matched M2"
+
 # Plot
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -92,6 +109,6 @@ ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')
 ax.set_zlabel('Z Label')
 ax.set_title('Point cloud reconstruction')
-ax.scatter(X[:, 0].tolist(), X[:, 1].tolist(), X[:, 2].tolist())
+ax.scatter(X[:, 0].tolist(), X[:, 1].tolist(), X[:, 2].tolist(), s=3)
 plt.show()
 plt.close()

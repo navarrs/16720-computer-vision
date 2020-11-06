@@ -45,15 +45,13 @@ def eightpoint(pts1, pts2, M):
     S[-1] = 0.0
     F = U @ np.diag(S) @ V_T
     # print(F)    
-    
-    # Refine
-    F = refineF(F, pts1n, pts2n)
      
     # Unnormalize
     T = np.array([[1./M, 0, 0], 
                   [0, 1./M, 0], 
                   [0,    0, 1]], dtype=np.float)
     F = T.T @ F @ T
+    F /= F[-1, -1]
     # print(F)
     return F
 
@@ -220,17 +218,26 @@ def ransacF(pts1, pts2, M, nIters=1000, tol=0.42):
         for j in range(N):
             p1 = pts1h[j]
             p2 = pts2h[j]
-            if abs(p2 @ F @ p1.T) < tol:
+            
+            # too noisy
+            # if abs(p2 @ F @ p1.T) < tol:
+            #     inliers[j] = True
+            
+            l = F @ p1.T
+            d = l[0] * p2[0] + l[1] * p2[1] + l[2]
+            d /= np.sqrt(l[0]**2 + l[1]**2)
+            if abs(d) < tol:
                 inliers[j] = True
         
         inlier_count = np.sum(inliers)
         if inlier_count > max_inliers:
             max_inliers = inlier_count
             best_inliers = inliers
-    
+            
     p1 = pts1[best_inliers == True]
     p2 = pts2[best_inliers == True]
     F  = eightpoint(p1, p2, M)
+    # F = refineF(F, p1, p2)
     return F, best_inliers
         
 '''
