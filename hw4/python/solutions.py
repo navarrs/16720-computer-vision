@@ -33,7 +33,7 @@ def q2_1(I1, I2, M):
         pts2 = data['pts2']
 
     F = eightpoint(pts1=pts1, pts2=pts2, M=M)
-    np.savez(q2_1_file, F=F, M=M)
+    # np.savez(q2_1_file, F=F, M=M)
 
     # sanity check
     with np.load(q2_1_file) as data:
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     M = max(I1.shape[0], I1.shape[1])
 
     # required
-    # q2_1(I1, I2, M)
+    q2_1(I1, I2, M)
     # q3_1()
     # q4_1(I1, I2)
     

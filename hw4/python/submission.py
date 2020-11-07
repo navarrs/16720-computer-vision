@@ -45,13 +45,15 @@ def eightpoint(pts1, pts2, M):
     S[-1] = 0.0
     F = U @ np.diag(S) @ V_T
     # print(F)    
+    
+    F = refineF(F, pts1n, pts2n)
      
     # Unnormalize
     T = np.array([[1./M, 0, 0], 
                   [0, 1./M, 0], 
                   [0,    0, 1]], dtype=np.float)
     F = T.T @ F @ T
-    F /= F[-1, -1]
+    # F /= F[-1, -1]
     # print(F)
     return F
 
@@ -276,9 +278,9 @@ def invRodrigues(R):
             return -r
         return r
     
-    if not np.allclose(abs(R @ R.T - np.identity(3)), 0.0):
-        print("Invalid rotation matrix")
-        return 
+    # if not np.allclose(abs(R @ R.T - np.identity(3)), 0.0):
+    #     print("Invalid rotation matrix")
+    #     return 
     
     A = (R - R.T) / 2.0
     a = np.array([A[2, 1], A[0, 2], A[1, 0]]).T 
@@ -329,7 +331,8 @@ def rodriguesResidual(K1, M1, p1, K2, p2, x):
     p2_hat = (C2 @ X_h.T).T
     p2_hat = np.divide(p2_hat, p2_hat[:, -1].reshape(N, 1))[:, :-1]
     
-    return np.concatenate([(p1-p1_hat).reshape([-1]), (p2-p2_hat).reshape([-1])])
+    residuals = np.concatenate([(p1-p1_hat).reshape([-1]), (p2-p2_hat).reshape([-1])])
+    return residuals.reshape(4*N, 1)
         
 '''
 Q5.3 Extra Credit  Bundle adjustment.
@@ -349,7 +352,7 @@ def bundleAdjustment(K1, M1, p1, K2, M2_init, p2, P_init):
     P_init = np.vstack([P_init, invRodrigues(M2_init[:3, :3])])
     P_init = np.vstack([P_init, t])
     
-    f = lambda x: rodriguesResidual(K1, M1, p1, K2, p2, x)
+    f = lambda x: rodriguesResidual(K1, M1, p1, K2, p2, x).reshape(4*N)
     res = scipy.optimize.leastsq(f, P_init)
     
     R = rodrigues(res[0][N*3:N*3 + 3])

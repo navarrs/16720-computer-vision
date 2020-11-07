@@ -35,7 +35,7 @@ correct_files = [
     'submission.py',
     'findM2.py',
     'visualize.py',
-    'q2_1.npz'
+    'q2_1.npz',
     'q3_3.npz',
     'q4_1.npz',
     'q4_2.npz',

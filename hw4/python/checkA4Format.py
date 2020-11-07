@@ -21,8 +21,8 @@ assert F8.shape == (3, 3), 'eightpoint returns 3x3 matrix'
 #F7 = sub.sevenpoint(data['pts1'][:7, :], data['pts2'][:7, :], M)
 #assert (len(F7) == 1) | (len(F7) == 3), 'sevenpoint returns length-1/3 list'
 
-for f7 in F7:
-    assert f7.shape == (3, 3), 'seven returns list of 3x3 matrix'
+# for f7 in F7:
+#     assert f7.shape == (3, 3), 'seven returns list of 3x3 matrix'
 
 # 3.1
 C1 = np.concatenate([np.random.rand(3, 3), np.ones([3, 1])], axis=1)
@@ -40,31 +40,31 @@ assert np.isscalar(x2) & np.isscalar(y2), 'epipolarCoorespondence returns x & y 
 """
 You can opt to uncomment this if extra credit q5 is implemented. Note this only checks formatting. 
 """
-# F = sub.ransacF(data['pts1'], data['pts2'], M)
-# assert F.shape == (3, 3), 'ransacF returns 3x3 matrix'
+F, _ = sub.ransacF(data['pts1'], data['pts2'], M)
+assert F.shape == (3, 3), 'ransacF returns 3x3 matrix'
 
-# # 5.2
-# r = np.ones([3, 1])
-# R = sub.rodrigues(r)
-# assert R.shape == (3, 3), 'rodrigues returns 3x3 matrix'
+# 5.2
+r = np.ones([3, 1])
+R = sub.rodrigues(r)
+assert R.shape == (3, 3), 'rodrigues returns 3x3 matrix'
 
-# R = np.eye(3);
-# r = sub.invRodrigues(R)
-# assert (r.shape == (3, )) | (r.shape == (3, 1)), 'invRodrigues returns 3x1 vector'
+R = np.eye(3);
+r = sub.invRodrigues(R)
+assert (r.shape == (3, )) | (r.shape == (3, 1)), 'invRodrigues returns 3x1 vector'
 
-# # 5.3
-# K1 = np.random.rand(3, 3)
-# K2 = np.random.rand(3, 3)
-# M1 = np.concatenate([np.random.rand(3, 3), np.ones([3, 1])], axis=1)
-# M2 = np.concatenate([np.random.rand(3, 3), np.ones([3, 1])], axis=1)
-# r2 = np.ones(3)
-# t2 = np.ones(3)
-# x = np.concatenate([P.reshape([-1]), r2, t2])
-# residuals = sub.rodriguesResidual(K1, M1, data['pts1'], K2, data['pts1'], x)
-# assert residuals.shape == (4 * N, 1), 'rodriguesResidual returns vector of size 4Nx1'
+# 5.3
+K1 = np.random.rand(3, 3)
+K2 = np.random.rand(3, 3)
+M1 = np.concatenate([np.random.rand(3, 3), np.ones([3, 1])], axis=1)
+M2 = np.concatenate([np.random.rand(3, 3), np.ones([3, 1])], axis=1)
+r2 = np.ones(3)
+t2 = np.ones(3)
+x = np.concatenate([P.reshape([-1]), r2, t2])
+residuals = sub.rodriguesResidual(K1, M1, data['pts1'], K2, data['pts1'], x)
+assert residuals.shape == (4 * N, 1), 'rodriguesResidual returns vector of size 4Nx1'
 
-# M2, P = sub.bundleAdjustment(K1, M1, data['pts1'], K2, M2, data['pts1'], P)
-# assert M2.shape == (3, 4), 'bundleAdjustment returns 3x4 matrix M'
-# assert P.shape == (N, 3), 'bundleAdjustment returns Nx3 matrix P'
+M2, P = sub.bundleAdjustment(K1, M1, data['pts1'], K2, M2, data['pts1'], P)
+assert M2.shape == (3, 4), 'bundleAdjustment returns 3x4 matrix M'
+assert P.shape == (N, 3), 'bundleAdjustment returns Nx3 matrix P'
 
 print('Format check passed.')

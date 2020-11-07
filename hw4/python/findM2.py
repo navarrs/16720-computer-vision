@@ -30,7 +30,7 @@ else:
     I2 = cv2.imread("../data/im2.png")
     M = max(I1.shape[0], I1.shape[1])
     F = eightpoint(pts1=pts1, pts2=pts2, M=M)
-    np.savez(F_file, F=F, M=M)
+    # np.savez(F_file, F=F, M=M)
 print(f"F:\n{F}")
 
 # Find the essential matrix
@@ -62,7 +62,7 @@ for i in range(4):
     # Valid solution would be the one where z is positive. Thus, the points 
     # are in front of both cameras. 
     if np.all(P[:, -1] > 0):
-        print(f"M2 found for i={i+1}")
+        print(f"M2 found for i={i+1} with err: {err}")
         np.savez(q3_3_file, M2=M2, C2=C2, P=P)
         
         # sanity check 
@@ -73,7 +73,7 @@ for i in range(4):
             assert C2.shape == (3, 4), f"C2 shape is {C2.shape} instead of (3, 4)"
             P = data['P']
             assert P.shape == (N, 3), f"P shape is {P.shape} instead of ({N}, 3)"
-            print(f"M2:\n{M2}\nC2:\n{C2}")
+            print(f"M2:\n{M2}\nC2:\n{C2}\n")
             # print(P)
         break
         
