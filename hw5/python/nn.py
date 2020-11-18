@@ -280,4 +280,3 @@ def get_random_batches(x,y,batch_size):
     ##### your code here #####
     ##########################
     return batches
-
