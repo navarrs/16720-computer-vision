@@ -40,6 +40,7 @@ print("{}, {:.2f}".format(params['boutput'].sum(),params['Woutput'].std()**2))
 test = sigmoid(np.array([-1000,1000]))
 print('should be zero and one:\t',test.min(),test.max())
 # implement forward
+
 h1 = forward(x, params, 'layer1')
 print(h1.shape)
 # Q 2.2.2
@@ -64,47 +65,58 @@ delta1[np.arange(probs.shape[0]),y_idx] -= 1
 # we already did derivative through softmax
 # so we pass in a linear_deriv, which is just a vector of ones
 # to make this a no-op
-# delta2 = backwards(delta1, params, 'output', linear_deriv)
-# # Implement backwards!
-# backwards(delta2,params,'layer1',sigmoid_deriv)
+delta2 = backwards(delta1, params, 'output', linear_deriv)
+# Implement backwards!
+backwards(delta2, params, 'layer1', sigmoid_deriv)
 
-# # W and b should match their gradients sizes
-# for k,v in sorted(list(params.items())):
-#     if 'grad' in k:
-#         name = k.split('_')[1]
-#         print(name,v.shape, params[name].shape)
+# W and b should match their gradients sizes
+for k, v in sorted(list(params.items())):
+    if 'grad' in k:
+        name = k.split('_')[1]
+        print(name,v.shape, params[name].shape)
 
-# # Q 2.4
-# batches = get_random_batches(x,y,5)
-# # print batch sizes
-# print([_[0].shape[0] for _ in batches])
-# batch_num = len(batches)
+# Q 2.4
+batches = get_random_batches(x, y, 5)
+# print batch sizes
+print([_[0].shape[0] for _ in batches])
+batch_num = len(batches)
 
-# # WRITE A TRAINING LOOP HERE
-# max_iters = 500
-# learning_rate = 1e-3
-# # with default settings, you should get loss < 35 and accuracy > 75%
-# for itr in range(max_iters):
-#     total_loss = 0
-#     avg_acc = 0
-#     for xb,yb in batches:
-#         pass
-#         # forward
-
-#         # loss
-#         # be sure to add loss and accuracy to epoch totals 
-
-#         # backward
-
-#         # apply gradient
-
-#         ##########################
-#         ##### your code here #####
-#         ##########################
-
+# WRITE A TRAINING LOOP HERE
+max_iters = 500
+learning_rate = 1e-3
+# with default settings, you should get loss < 35 and accuracy > 75%
+for itr in range(max_iters):
+    total_loss = 0
+    avg_acc = 0
+    for xb, yb in batches:
+        # forward
+        h1 = forward(xb, params, 'layer1', activation=sigmoid)
+        yp = forward(h1, params, 'output', activation=softmax)
         
-#     if itr % 100 == 0:
-#         print("itr: {:02d} \t loss: {:.2f} \t acc : {:.2f}".format(itr,total_loss,avg_acc))
+        # loss
+        # be sure to add loss and accuracy to epoch totals 
+        loss, acc = compute_loss_and_acc(yb, yp)
+        total_loss += loss 
+        avg_acc += acc/batch_num
+
+        # backward
+        delta1 = yp - yb
+        delta2 = backwards(delta1, params, 'output', linear_deriv)
+        backwards(delta2, params, 'layer1', sigmoid_deriv)
+        
+        # apply gradient
+        # xb = xb - learning_rate * grad_x
+        params['Woutput'] -= learning_rate * params['grad_Woutput']
+        params['boutput'] -= learning_rate * params['grad_boutput']
+        params['Wlayer1'] -= learning_rate * params['grad_Wlayer1']
+        params['blayer1'] -= learning_rate * params['grad_blayer1']
+        
+        ##########################
+        ##### your code here #####
+        ##########################
+                
+    if itr % 100 == 0:
+        print("itr: {:02d} \t loss: {:.2f} \t acc : {:.2f}".format(itr,total_loss,avg_acc))
 
 
 # # Q 2.5 should be implemented in this file

@@ -53,7 +53,6 @@ def forward(X, params, name='', activation=sigmoid):
     # store the pre-activation and post-activation values
     # these will be important in backprop
     params['cache_' + name] = (X, pre_act, post_act)
-
     return post_act
 
 ############################## Q 2.2.2  ##############################
@@ -88,7 +87,6 @@ def compute_loss_and_acc(y, probs):
     y_labels = np.argmax(y, axis=1)
     y_hat_labels = np.argmax(probs, axis=1)
     acc = len(np.where(y_labels == y_hat_labels)[0]) / N
-
     return loss, acc 
 
 ############################## Q 2.3 ##############################
@@ -99,7 +97,7 @@ def sigmoid_deriv(post_act):
     res = post_act*(1.0-post_act)
     return res
 
-def backwards(delta,params,name='',activation_deriv=sigmoid_deriv):
+def backwards(delta, params, name='', activation_deriv=sigmoid_deriv):
     """
     Do a backwards pass
 
@@ -119,10 +117,13 @@ def backwards(delta,params,name='',activation_deriv=sigmoid_deriv):
     ##########################
     ##### your code here #####
     ##########################
-    dJdy = sigmoid_deriv(post_act=post_act)
-    grad_X = dJdy.T @ W
-    grad_W = dJdy.T @ X
-    grad_b = dJdy
+    delta *= activation_deriv(post_act=post_act)
+    grad_W = (delta.T @ X).T
+    grad_X = delta @ W.T
+    grad_b = delta.T @ np.ones(delta.shape[0])
+    # print(grad_W.shape, W.shape)
+    # print(grad_X.shape, X.shape)
+    # print(grad_b.shape, b.shape)
 
     # store the gradients
     params['grad_W' + name] = grad_W
@@ -132,9 +133,20 @@ def backwards(delta,params,name='',activation_deriv=sigmoid_deriv):
 ############################## Q 2.4 ##############################
 # split x and y into random batches
 # return a list of [(batch1_x,batch1_y)...]
-def get_random_batches(x,y,batch_size):
+def get_random_batches(x, y, batch_size):
     batches = []
     ##########################
     ##### your code here #####
     ##########################
+    rng_state = np.random.get_state()
+    np.random.shuffle(x)
+    np.random.set_state(rng_state)
+    np.random.shuffle(y)
+    
+    n_batches = int(len(x)/batch_size)
+    for n in range(n_batches):
+        s = n * batch_size
+        # print(f"start{s} end{s+batch_size}")
+        batches.append((x[s:s+batch_size], y[s:s+batch_size]))
+    
     return batches
