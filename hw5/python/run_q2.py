@@ -12,6 +12,7 @@ g1 = np.random.multivariate_normal([3.9,10],[[0.01,0],[0,5]],10)
 g2 = np.random.multivariate_normal([3.4,30],[[0.25,0],[0,5]],10)
 g3 = np.random.multivariate_normal([2.0,10],[[0.5,0],[0,10]],10)
 x = np.vstack([g0,g1,g2,g3])
+print(x.shape)
 # we will do XW + B
 # that implies that the data is N x D
 
@@ -96,7 +97,7 @@ for itr in range(max_iters):
         # loss
         # be sure to add loss and accuracy to epoch totals 
         loss, acc = compute_loss_and_acc(yb, yp)
-        total_loss += loss 
+        total_loss += loss /batch_num
         avg_acc += acc/batch_num
 
         # backward
@@ -116,34 +117,37 @@ for itr in range(max_iters):
         ##########################
                 
     if itr % 100 == 0:
-        print("itr: {:02d} \t loss: {:.2f} \t acc : {:.2f}".format(itr,total_loss,avg_acc))
+        print("itr: {:02d} \t loss: {:.2f} \t acc : {:.2f}"
+              .format(itr,total_loss,avg_acc))
 
 
-# # Q 2.5 should be implemented in this file
-# # you can do this before or after training the network. 
+# Q 2.5 should be implemented in this file
+# you can do this before or after training the network. 
 
-# ##########################
-# ##### your code here #####
-# ##########################
+##########################
+##### your code here #####
+##########################
 
-# # save the old params
-# import copy
-# params_orig = copy.deepcopy(params)
+# save the old params
+import copy
+params_orig = copy.deepcopy(params)
 
-# eps = 1e-6
-# for k,v in params.items():
-#     if '_' in k: 
-#         continue
-#     # we have a real parameter!
-#     # for each value inside the parameter
-#     #   add epsilon
-#     #   run the network
-#     #   get the loss
-#     #   compute derivative with central diffs
+eps = 1e-6
+for k,v in params.items():
+    if '_' in k: 
+        continue
+    # we have a real parameter!
+    # for each value inside the parameter
+    #   add epsilon
+    #   run the network
+    #   get the loss
+    #   compute derivative with central diffs
     
-#     ##########################
-#     ##### your code here #####
-#     ##########################
+    ##########################
+    ##### your code here #####
+    ##########################
+    # v += eps
+    
 
 # total_error = 0
 # for k in params.keys():
