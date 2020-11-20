@@ -126,31 +126,39 @@ grid = ImageGrid(F, 111, nrows_ncols=(8, 8), axes_pad=0.05)
 
 learned_w = params['Wlayer1']
 for i in range(hidden_size):
-    w = init_w[:, i].reshape(32, 32)
-    # w = learned_w[:, i].reshape(32, 32)
+    # w = init_w[:, i].reshape(32, 32)
+    w = learned_w[:, i].reshape(32, 32)
     
     ax = grid[i]
     ax.imshow(w, origin="lower", interpolation="nearest")
     
     
 plt.draw()
-plt.savefig("../out/q3/init_weights.png")
-# plt.savefig("../out/q3/weights_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
-#             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
+# plt.savefig("../out/q3/init_weights.png")
+plt.savefig("../out/q3/weights_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
+            .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
 
 plt.show()
 
-# # Q3.4
-# confusion_matrix = np.zeros((train_y.shape[1],train_y.shape[1]))
+# Q3.4
+confusion_matrix = np.zeros((train_y.shape[1], train_y.shape[1]))
 
-# # compute comfusion matrix here
-# ##########################
-# ##### your code here #####
-# ##########################
-
-# import string
-# plt.imshow(confusion_matrix,interpolation='nearest')
-# plt.grid(True)
-# plt.xticks(np.arange(36),string.ascii_uppercase[:26] + ''.join([str(_) for _ in range(10)]))
-# plt.yticks(np.arange(36),string.ascii_uppercase[:26] + ''.join([str(_) for _ in range(10)]))
-# plt.show()
+# compute confusion matrix here
+##########################
+##### your code here #####
+##########################
+yl = np.argmax(valid_y, axis=1)
+yh = np.argmax(yp, axis=1)
+for i in range(yl.shape[0]):
+    confusion_matrix[yl[i], yh[i]] += 1
+    
+import string
+plt.imshow(confusion_matrix, interpolation='nearest')
+plt.grid(True)
+plt.xticks(np.arange(36),string.ascii_uppercase[:26] + 
+           ''.join([str(_) for _ in range(10)]))
+plt.yticks(np.arange(36),string.ascii_uppercase[:26] + 
+           ''.join([str(_) for _ in range(10)]))
+plt.savefig("../out/q3/confmat_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
+            .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
+plt.show()
