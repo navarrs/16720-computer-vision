@@ -15,6 +15,8 @@ max_iters = 100
 batch_size = 36 
 learning_rate =  3e-5
 hidden_size = 32
+in_size = 1024
+out_size =1024
 lr_rate = 20
 batches = get_random_batches(train_x,np.ones((train_x.shape[0],1)),batch_size)
 batch_num = len(batches)
@@ -26,11 +28,20 @@ params = Counter()
 ##########################
 ##### your code here #####
 ##########################
+initialize_weights(in_size=in_size, out_size=hidden_size, 
+                   params=params, name='enc_l1')
+initialize_weights(in_size=hidden_size, out_size=hidden_size, 
+                   params=params, name='enc_out')
+initialize_weights(in_size=hidden_size, out_size=hidden_size, 
+                   params=params, name='dec_l1')
+initialize_weights(in_size=hidden_size, out_size=out_size, 
+                   params=params, name='dec_out')
+
 
 # should look like your previous training loops
 for itr in range(max_iters):
     total_loss = 0
-    for xb,_ in batches:
+    for xb, _ in batches:
         # training loop can be exactly the same as q2!
         # your loss is now squared error
         # delta is the d/dx of (x-y)^2
@@ -43,6 +54,14 @@ for itr in range(max_iters):
         ##########################
         ##### your code here #####
         ##########################
+        enc_h1 = forward(xb, params, 'enc_l1', activation=relu)
+        enc_out = forward(enc_h1, params, 'enc_out', activation=relu)
+        dec_h1 = forward(enc_out, params, 'dec_l1', activation=relu)
+        dec_out = forward(dec_h1, params, 'dec_out', activation=sigmoid)
+        
+        loss = (xb-dec_out)**2
+        
+        delta1 = 2*xb - 2*dec_out
 
     if itr % 2 == 0:
         print("itr: {:02d} \t loss: {:.2f}".format(itr,total_loss))
