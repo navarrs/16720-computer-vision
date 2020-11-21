@@ -13,7 +13,7 @@ valid_x, valid_y = valid_data['valid_data'], valid_data['valid_labels']
 max_iters = 30
 # pick a batch size, learning rate
 batch_size = 108
-learning_rate = 1e-2 # 0.001 
+learning_rate = 1e-3 # 0.01 
 hidden_size = 64
 ##########################
 ##### your code here #####
@@ -103,7 +103,7 @@ yp = forward(h1, params, 'output', activation=softmax)
 _, valid_acc = compute_loss_and_acc(valid_y, yp)
 
 print('Validation accuracy: ',valid_acc)
-if False: # view the data
+if True: # view the data
     for crop in xb:
         import matplotlib.pyplot as plt
         plt.imshow(crop.reshape(32,32).T)
