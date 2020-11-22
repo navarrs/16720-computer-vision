@@ -69,11 +69,38 @@ class MLP(nn.Module):
 
 
 class CNN(nn.Module):
+    def __init__(self, channels=1):
+        super(CNN, self).__init__()
+
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(channels, 32, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        self.drop = nn.Dropout()
+        self.fc1 = nn.Linear(8 * 8 * 64, 1000)
+        self.fc2 = nn.Linear(1000, 36)
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = x.view(-1, 64 * 8 * 8)
+        x = self.drop(x)
+        x = self.fc1(x)
+        return self.fc2(x)
+
+
+class CNN2(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
 
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(3, 32, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
@@ -98,7 +125,7 @@ class CNN(nn.Module):
 #
 # Q6.1.1 Fully connected network
 # ------------------------------------------------------------------------------
-def q6_1_1(epochs=30, lr_rate = 1e-3, batch_size = 108):
+def q6_1_1(epochs=30, lr_rate=1e-3, batch_size=108):
 
     train_dataset = Dataset(train_x, train_y)
     val_dataset = Dataset(valid_x, valid_y)
@@ -169,17 +196,8 @@ def q6_1_1(epochs=30, lr_rate = 1e-3, batch_size = 108):
     print(f"Validation accuracy: {correct / total}")
 
 
-def q6_1_2(epochs=10, lr_rate = 1e-3, batch_size = 108):
-
-    train_dataset = Dataset2(train_x, train_y)
-    val_dataset = Dataset2(valid_x, valid_y)
-
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=1, shuffle=False)
-
-    net = CNN()
+def q6_1_2(net, train_loader, val_loader, dataset,
+           batch_size=108, epochs=10, lr_rate=1e-3, ):
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters(), lr=lr_rate)
@@ -189,6 +207,7 @@ def q6_1_2(epochs=10, lr_rate = 1e-3, batch_size = 108):
     for epoch in range(epochs):
         total_loss = 0.0
         total_acc = 0.0
+        n = 0
         for i, data in enumerate(train_loader, 0):
             X, y = data
 
@@ -196,7 +215,8 @@ def q6_1_2(epochs=10, lr_rate = 1e-3, batch_size = 108):
 
             yout = net(X)
             _, pred = torch.max(yout.data, 1)
-            total_acc += (pred == y).sum().item() / y.size(0)
+            n += y.size(0)
+            total_acc += (pred == y).sum().item()
 
             loss = criterion(yout, y)
             loss.backward()
@@ -205,6 +225,7 @@ def q6_1_2(epochs=10, lr_rate = 1e-3, batch_size = 108):
             total_loss += loss.item()
 
         losses.append(total_loss)
+        total_acc /= n
         accs.append(total_acc)
         if epoch % 2 == 0:    # print every 2000 mini-batches
             print('[epoch %d] loss: %.3f acc: %.3f' %
@@ -224,8 +245,8 @@ def q6_1_2(epochs=10, lr_rate = 1e-3, batch_size = 108):
     plt.ylabel('accuracy')
     plt.xlabel('epochs')
 
-    plt.savefig("../out/q6/cnn_loss-{:.3f}_acc-{:.3f}_epocs-{}_lr-{}_batch-{}.png"
-                .format(total_loss, total_acc, epochs, lr_rate, batch_size))
+    plt.savefig("../out/q6/cnn_{}_loss-{:.3f}_acc-{:.3f}_epocs-{}_lr-{}_batch-{}.png"
+                .format(dataset, total_loss, total_acc, epochs, lr_rate, batch_size))
 
     plt.show()
 
@@ -243,8 +264,37 @@ def q6_1_2(epochs=10, lr_rate = 1e-3, batch_size = 108):
 
 
 if __name__ == "__main__":
-    # MLP
+    # Q6.1.1 - MLP
     # q6_1_1()
 
-    # CNN
-    q6_1_2()
+    # Q6.1.2 - CNN - NIST
+    # train_dataset = Dataset2(train_x, train_y)
+    # val_dataset = Dataset2(valid_x, valid_y)
+
+    # batch_size = 108
+    # train_loader = torch.utils.data.DataLoader(
+    #     train_dataset, batch_size=batch_size, shuffle=True)
+    # val_loader = torch.utils.data.DataLoader(
+    #     val_dataset, batch_size=1, shuffle=False)
+    # net = CNN()
+    # q6_1_2(net, train_loader, val_loader, 'nist', batch_size)
+
+    # Q6.1.3 - CNN - CIFAR
+    # import torchvision
+    # import torchvision.transforms as transforms
+    # batch_size = 50
+    # trans = transforms.Compose(
+    #     [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    # train_dataset = torchvision.datasets.CIFAR10(
+    #     root="../data", train=True, transform=trans, download=True)
+    # val_dataset = torchvision.datasets.CIFAR10(
+    #     root="../data", train=False, transform=trans)
+
+    # train_loader = torch.utils.data.DataLoader(
+    #   train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
+    # val_loader = torch.utils.data.DataLoader(
+    #   val_dataset, batch_size=1, shuffle=False, num_workers=2)
+    # net = CNN(channels=3)
+    # q6_1_2(net, train_loader, val_loader, 'cifar', batch_size)
+    
+    # Q6.1.4 - CNN - SUN
