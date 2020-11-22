@@ -117,7 +117,7 @@ def backwards(delta, params, name='', activation_deriv=sigmoid_deriv):
     ##########################
     ##### your code here #####
     ##########################
-    delta *= activation_deriv(post_act=post_act)
+    delta *= activation_deriv(post_act)
     grad_W = (delta.T @ X).T
     grad_X = delta @ W.T
     grad_b = delta.T @ np.ones(delta.shape[0])
