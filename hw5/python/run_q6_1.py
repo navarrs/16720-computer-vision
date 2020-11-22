@@ -279,9 +279,10 @@ if __name__ == "__main__":
     # net = CNN()
     # q6_1_2(net, train_loader, val_loader, 'nist', batch_size)
 
+    import torchvision
+    import torchvision.transforms as transforms
+    
     # Q6.1.3 - CNN - CIFAR
-    # import torchvision
-    # import torchvision.transforms as transforms
     # batch_size = 50
     # trans = transforms.Compose(
     #     [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
@@ -298,3 +299,12 @@ if __name__ == "__main__":
     # q6_1_2(net, train_loader, val_loader, 'cifar', batch_size)
     
     # Q6.1.4 - CNN - SUN
+    # trans = transforms.Compose([
+    #   transforms.Resize(128),
+    #   transforms.CenterCrop(128),
+    #   transforms.ToTensor()
+    # ])
+    # train_dataset = torchvision.datasets.LSUN(
+    #   root="../data", classes='train', transform=trans)
+    
+    
