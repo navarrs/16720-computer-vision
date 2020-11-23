@@ -166,9 +166,9 @@ for k, v in params.items():
                 loss_m, _ = compute_loss_and_acc(y, yp)
 
                 params['grad_'+k][i, j] = (loss_p-loss_m) / (2*eps)
-                print("loss p {} loss m {} central diff: {} - orig {}"
-                      .format(loss_p, loss_m,
-                              params['grad_'+k][i, j], params_orig['grad_'+k][i, j]))
+                # print("loss p {} loss m {} central diff: {} - orig {}"
+                #       .format(loss_p, loss_m,
+                #               params['grad_'+k][i, j], params_orig['grad_'+k][i, j]))
     else:
         for i in range(v.shape[0]):
             # f(x+eps)
@@ -186,11 +186,12 @@ for k, v in params.items():
             loss_m, _ = compute_loss_and_acc(y, yp)
 
             params['grad_'+k][i] = (loss_p-loss_m) / (2*eps)
-            print("loss p {} loss m {} central diff: {} - orig {}"
-                  .format(loss_p, loss_m,
-                          params['grad_'+k][i], params_orig['grad_'+k][i]))
+            # print("loss p {} loss m {} central diff: {} - orig {}"
+            #       .format(loss_p, loss_m,
+            #               params['grad_'+k][i], params_orig['grad_'+k][i]))
 
 
+# Gradient update using backprop
 h1 = forward(x, params_orig, 'layer1', activation=sigmoid)
 yp = forward(h1, params_orig, 'output', activation=softmax)
 delta2 = backwards(yp - y, params_orig, 'output', linear_deriv)

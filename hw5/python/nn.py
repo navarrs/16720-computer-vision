@@ -12,9 +12,9 @@ def initialize_weights(in_size, out_size, params, name=''):
     ##########################
     ##### your code here #####
     ##########################
-    xavier = np.sqrt(6) / np.sqrt(in_size + out_size)
+    xavier = np.float64(np.sqrt(6) / np.sqrt(in_size + out_size))
     W = np.random.uniform(low=-xavier, high=xavier, size=(in_size, out_size))
-    b = np.zeros(shape=(out_size), dtype=np.float32)
+    b = np.zeros(shape=(out_size), dtype=np.float64)
 
     params['W' + name] = W
     params['b' + name] = b
