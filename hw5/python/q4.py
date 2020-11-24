@@ -42,7 +42,7 @@ def findLetters(image):
     labels = Me.label(cleared, connectivity=2)
     
     for region in Me.regionprops(labels):
-        if region.area > 100:
+        if region.area > 400:
             bboxes.append(region.bbox)
     
     return bboxes, bw

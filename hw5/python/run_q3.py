@@ -1,4 +1,7 @@
-import copy 
+import string
+from mpl_toolkits.axes_grid1 import ImageGrid
+import pickle
+import copy
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
@@ -13,7 +16,7 @@ valid_x, valid_y = valid_data['valid_data'], valid_data['valid_labels']
 max_iters = 30
 # pick a batch size, learning rate
 batch_size = 54
-learning_rate = 1e-2 # 0.01 
+learning_rate = 1e-2  # 0.01
 hidden_size = 64
 ##########################
 ##### your code here #####
@@ -30,8 +33,8 @@ params = {}
 ##########################
 ##### your code here #####
 ##########################
-initialize_weights(in_size, hidden_size, params,'layer1')
-initialize_weights(hidden_size, n_cls, params,'output')
+initialize_weights(in_size, hidden_size, params, 'layer1')
+initialize_weights(hidden_size, n_cls, params, 'output')
 
 init_w = copy.deepcopy(params['Wlayer1'])
 
@@ -41,7 +44,7 @@ accs = []
 for itr in range(max_iters):
     total_loss = 0
     total_acc = 0
-    for xb,yb in batches:
+    for xb, yb in batches:
         # training loop can be exactly the same as q2!
         ##########################
         ##### your code here #####
@@ -49,17 +52,17 @@ for itr in range(max_iters):
         # forward
         h1 = forward(xb, params, 'layer1', activation=sigmoid)
         yp = forward(h1, params, 'output', activation=softmax)
-        
+
         # loss and accuracy
         loss, acc = compute_loss_and_acc(yb, yp)
         total_loss += loss / batch_num
         total_acc += acc / batch_num
-        
+
         # backward
         delta1 = yp - yb
         delta2 = backwards(delta1, params, 'output', linear_deriv)
         backwards(delta2, params, 'layer1', sigmoid_deriv)
-        
+
         # apply gradient
         # xb = xb - learning_rate * grad_x
         params['Woutput'] -= learning_rate * params['grad_Woutput']
@@ -69,25 +72,27 @@ for itr in range(max_iters):
 
     losses.append(total_loss)
     accs.append(total_acc)
-    
+
     if itr % 2 == 0:
         print("itr: {:02d} \t loss: {:.2f} \t acc : {:.2f}"
               .format(itr, total_loss, total_acc))
 
 # Plot loss and accuracy
 epochs = np.arange(start=0, stop=max_iters, step=1)
-plt.subplot(1, 2, 1)
-plt.plot(epochs, losses, 'ko-')
-plt.title('Loss vs Epochs')
 
-plt.ylabel('loss')
-plt.xlabel('epochs')
+fig, axs = plt.subplots(1, 2, constrained_layout=True)
+fig.suptitle(
+    f"iters:{max_iters} - batch-size: {batch_size} - lr: {learning_rate}",
+    fontsize=12)
+axs[0].plot(epochs, losses, 'ko-')
+axs[0].set_title('Loss vs Epochs')
+axs[0].set_xlabel('epochs ')
+axs[0].set_ylabel('loss')
 
-plt.subplot(1, 2, 2)
-plt.plot(epochs, accs, 'r.-')
-plt.title('Accuracy vs Epochs')
-plt.ylabel('accuracy')
-plt.xlabel('epochs')
+axs[1].plot(epochs, accs, 'r.-')
+axs[1].set_title('Accuracy vs Epochs')
+axs[1].set_xlabel('epochs')
+axs[1].set_ylabel('accuracy')
 
 plt.savefig("../out/q3/loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
@@ -100,22 +105,19 @@ plt.show()
 ##########################
 h1 = forward(valid_x, params, 'layer1', activation=sigmoid)
 yp = forward(h1, params, 'output', activation=softmax)
-_, valid_acc = compute_loss_and_acc(valid_y, yp)
+valid_loss, valid_acc = compute_loss_and_acc(valid_y, yp)
 
-print('Validation accuracy: ',valid_acc)
-if False: # view the data
+print(f'Validation loss: {valid_loss/len(valid_x)} accuracy: {valid_acc}')
+if False:  # view the data
     for crop in xb:
         import matplotlib.pyplot as plt
-        plt.imshow(crop.reshape(32,32).T)
+        plt.imshow(crop.reshape(32, 32).T)
         plt.show()
-import pickle
-saved_params = {k:v for k,v in params.items() if '_' not in k}
-with open('q3_weights.pickle', 'wb') as handle:
-    pickle.dump(saved_params, handle, protocol=pickle.HIGHEST_PROTOCOL)
+saved_params = {k: v for k, v in params.items() if '_' not in k}
+# with open('q3_weights.pickle', 'wb') as handle:
+#     pickle.dump(saved_params, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Q3.3
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import ImageGrid
 
 # visualize weights here
 ##########################
@@ -128,15 +130,15 @@ learned_w = params['Wlayer1']
 for i in range(hidden_size):
     # w = init_w[:, i].reshape(32, 32)
     w = learned_w[:, i].reshape(32, 32)
-    
+
     ax = grid[i]
     ax.imshow(w, origin="lower", interpolation="nearest")
-    
-    
+
+
 plt.draw()
 # plt.savefig("../out/q3/init_weights.png")
-plt.savefig("../out/q3/weights_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
-            .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
+# plt.savefig("../out/q3/weights_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
+#             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
 
 plt.show()
 
@@ -151,14 +153,13 @@ yl = np.argmax(valid_y, axis=1)
 yh = np.argmax(yp, axis=1)
 for i in range(yl.shape[0]):
     confusion_matrix[yl[i], yh[i]] += 1
-    
-import string
+
 plt.imshow(confusion_matrix, interpolation='nearest')
 plt.grid(True)
-plt.xticks(np.arange(36),string.ascii_uppercase[:26] + 
+plt.xticks(np.arange(36), string.ascii_uppercase[:26] +
            ''.join([str(_) for _ in range(10)]))
-plt.yticks(np.arange(36),string.ascii_uppercase[:26] + 
+plt.yticks(np.arange(36), string.ascii_uppercase[:26] +
            ''.join([str(_) for _ in range(10)]))
-plt.savefig("../out/q3/confmat_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
-            .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
+# plt.savefig("../out/q3/confmat_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
+#             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
 plt.show()

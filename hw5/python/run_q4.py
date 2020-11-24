@@ -34,7 +34,7 @@ for img in os.listdir('../images'):
         rect = matplotlib.patches.Rectangle((minc, minr), maxc - minc, maxr - minr,
                                             fill=False, edgecolor='red', linewidth=2)
         plt.gca().add_patch(rect)
-    plt.savefig(f"../out/q4/{img}")
+    plt.savefig(f"../out/q4/{img}", bbox_inches='tight', pad_inches=0)
     # plt.show()
     plt.close()
     # find the rows using..RANSAC, counting, clustering, etc.
@@ -43,7 +43,7 @@ for img in os.listdir('../images'):
     ##########################
     bx = np.asarray(bboxes)[:, 0].reshape(len(bboxes), 1)
     clustering = AgglomerativeClustering(
-        n_clusters=None, distance_threshold=100).fit(bx)
+        n_clusters=None, distance_threshold=120).fit(bx)
     labels = clustering.labels_
     
     label = labels[0]
@@ -93,6 +93,6 @@ for img in os.listdir('../images'):
     for i, y in enumerate(y_label):
         if curr_label != labels[i]:
             curr_label = labels[i]
-            print(f" -- ", end='')
+            print("")
         print(f"{letters[y]} ", end='')
     print(f"\n")

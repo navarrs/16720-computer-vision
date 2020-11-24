@@ -137,12 +137,15 @@ def q6_1_1(epochs=30, lr_rate=1e-3, batch_size=108):
     net = MLP()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters(), lr=lr_rate)
+    
     losses = []
     accs = []
+    
 
     for epoch in range(epochs):
-        total_loss = 0.0
-        total_acc = 0.0
+        running_loss = 0.0
+        running_acc = 0.0
+        n = 0
         for i, data in enumerate(train_loader, 0):
             X, y = data
 
@@ -150,50 +153,51 @@ def q6_1_1(epochs=30, lr_rate=1e-3, batch_size=108):
 
             yout = net(X)
             _, pred = torch.max(yout.data, 1)
-            total_acc += (pred == y).sum().item() / y.size(0)
 
             loss = criterion(yout, y)
             loss.backward()
             optimizer.step()
 
-            total_loss += loss.item()
+            # total_acc += (pred == y).sum().item()
+            running_loss += loss.item()
+            running_acc += (pred == y).sum()
+            n += len(pred)
+            
+        # losses.append(total_loss)
+        # accs.append(total_acc)
+        print('[epoch %d] loss: %.3f acc: %.3f' %
+              (epoch + 1, running_loss, running_acc / n))
 
-        losses.append(total_loss)
-        accs.append(total_acc)
-        if epoch % 2 == 0:    # print every 2000 mini-batches
-            print('[epoch %d] loss: %.3f acc: %.3f' %
-                  (epoch + 1, total_loss, total_acc))
+    # ep = np.arange(start=0, stop=epochs, step=1)
+    # plt.subplot(1, 2, 1)
+    # plt.plot(ep, losses, 'ko-')
+    # plt.title('Loss vs Epochs')
 
-    ep = np.arange(start=0, stop=epochs, step=1)
-    plt.subplot(1, 2, 1)
-    plt.plot(ep, losses, 'ko-')
-    plt.title('Loss vs Epochs')
+    # plt.ylabel('loss')
+    # plt.xlabel('epochs')
 
-    plt.ylabel('loss')
-    plt.xlabel('epochs')
+    # plt.subplot(1, 2, 2)
+    # plt.plot(ep, accs, 'r.-')
+    # plt.title('Accuracy vs Epochs')
+    # plt.ylabel('accuracy')
+    # plt.xlabel('epochs')
 
-    plt.subplot(1, 2, 2)
-    plt.plot(ep, accs, 'r.-')
-    plt.title('Accuracy vs Epochs')
-    plt.ylabel('accuracy')
-    plt.xlabel('epochs')
+    # plt.savefig("../out/q6/mlp_loss-{:.3f}_acc-{:.3f}_epocs-{}_lr-{}_batch-{}.png"
+    #             .format(total_loss, total_acc, epochs, lr_rate, batch_size))
 
-    plt.savefig("../out/q6/mlp_loss-{:.3f}_acc-{:.3f}_epocs-{}_lr-{}_batch-{}.png"
-                .format(total_loss, total_acc, epochs, lr_rate, batch_size))
+    # plt.show()
 
-    plt.show()
+    # total = 0
+    # correct = 0
+    # with torch.no_grad():
+    #     for data in val_loader:
+    #         X, y = data
+    #         yout = net(X)
+    #         _, pred = torch.max(yout.data, 1)
+    #         total += y.size(0)
+    #         correct += (pred == y).sum().item()
 
-    total = 0
-    correct = 0
-    with torch.no_grad():
-        for data in val_loader:
-            X, y = data
-            yout = net(X)
-            _, pred = torch.max(yout.data, 1)
-            total += y.size(0)
-            correct += (pred == y).sum().item()
-
-    print(f"Validation accuracy: {correct / total}")
+    # print(f"Validation accuracy: {correct / total}")
 
 
 def q6_1_2(net, train_loader, val_loader, dataset,
@@ -265,7 +269,7 @@ def q6_1_2(net, train_loader, val_loader, dataset,
 
 if __name__ == "__main__":
     # Q6.1.1 - MLP
-    # q6_1_1()
+    q6_1_1()
 
     # Q6.1.2 - CNN - NIST
     # train_dataset = Dataset2(train_x, train_y)
@@ -279,8 +283,8 @@ if __name__ == "__main__":
     # net = CNN()
     # q6_1_2(net, train_loader, val_loader, 'nist', batch_size)
 
-    import torchvision
-    import torchvision.transforms as transforms
+    # import torchvision
+    # import torchvision.transforms as transforms
     
     # Q6.1.3 - CNN - CIFAR
     # batch_size = 50

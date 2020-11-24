@@ -1,3 +1,5 @@
+from skimage.measure import compare_psnr as psnr
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
 from nn import *
@@ -12,13 +14,14 @@ valid_x = valid_data['valid_data']
 
 max_iters = 100
 # pick a batch size, learning rate
-batch_size = 36 
-learning_rate =  3e-5
+batch_size = 36
+learning_rate = 3e-5
 hidden_size = 32
 in_size = 1024
-out_size =1024
+out_size = 1024
 lr_rate = 20
-batches = get_random_batches(train_x,np.ones((train_x.shape[0],1)),batch_size)
+batches = get_random_batches(
+    train_x, np.ones((train_x.shape[0], 1)), batch_size)
 batch_num = len(batches)
 params = Counter()
 
@@ -27,20 +30,24 @@ params = Counter()
 ##########################
 ##### your code here #####
 ##########################
-initialize_weights(in_size=in_size, out_size=hidden_size, 
+initialize_weights(in_size=in_size, out_size=hidden_size,
                    params=params, name='elyr1')
-initialize_weights(in_size=hidden_size, out_size=hidden_size, 
+initialize_weights(in_size=hidden_size, out_size=hidden_size,
                    params=params, name='eout')
-initialize_weights(in_size=hidden_size, out_size=hidden_size, 
+initialize_weights(in_size=hidden_size, out_size=hidden_size,
                    params=params, name='dlyr1')
-initialize_weights(in_size=hidden_size, out_size=out_size, 
+initialize_weights(in_size=hidden_size, out_size=out_size,
                    params=params, name='dout')
-    
+
+
 def update(params, name, lr, mu=0.9):
-    params['m_W' + name] = mu * params['m_W' + name] - lr * params['grad_W' + name] 
+    params['m_W' + name] = mu * params['m_W' + name] - \
+        lr * params['grad_W' + name]
     params['W' + name] = params['W' + name] + params['m_W' + name]
-    params['m_b' + name] = mu * params['m_b' + name] - lr * params['grad_b' + name] 
+    params['m_b' + name] = mu * params['m_b' + name] - \
+        lr * params['grad_b' + name]
     params['b' + name] = params['b' + name] + params['m_b' + name]
+
 
 # should look like your previous training loops
 loss = []
@@ -63,30 +70,37 @@ for itr in range(max_iters):
         enc_out = forward(enc_h1, params, 'eout', activation=relu)
         dec_h1 = forward(enc_out, params, 'dlyr1', activation=relu)
         dec_out = forward(dec_h1, params, 'dout', activation=sigmoid)
-        
+
         total_loss += np.sum((xb - dec_out)**2) / batch_num
-        loss.append(total_loss)
-        
+
         delta1 = 2.0 * (dec_out - xb)
-        delta2 = backwards(delta1, params, 'dout', activation_deriv=sigmoid_deriv)
-        delta3 = backwards(delta2, params, 'dlyr1', activation_deriv=relu_deriv)
+        delta2 = backwards(delta1, params, 'dout',
+                           activation_deriv=sigmoid_deriv)
+        delta3 = backwards(delta2, params, 'dlyr1',
+                           activation_deriv=relu_deriv)
         delta4 = backwards(delta3, params, 'eout', activation_deriv=relu_deriv)
         backwards(delta4, params, 'elyr1', activation_deriv=relu_deriv)
-        
+
         update(params, 'elyr1', learning_rate)
-        update(params,'eout', learning_rate)
+        update(params, 'eout', learning_rate)
         update(params, 'dlyr1', learning_rate)
         update(params, 'dout', learning_rate)
         
-
+    loss.append(total_loss)
     if itr % 2 == 0:
         print("itr: {:02d} \t loss: {:.2f}".format(itr, total_loss))
     if itr % lr_rate == lr_rate-1:
         learning_rate *= 0.9
 
-        
+
 # Q5.3.1
-import matplotlib.pyplot as plt
+epochs = np.arange(start=0, stop=max_iters, step=1)
+plt.plot(epochs, loss)
+plt.title('Autoencoder Loss')
+plt.xlabel('epochs')
+plt.ylabel('loss')
+plt.show()
+plt.close()
 # visualize some results
 ##########################
 ##### your code here #####
@@ -102,19 +116,19 @@ for label in labels:
         eout = forward(eh1, params, 'eout', activation=relu)
         dh1 = forward(eout, params, 'dlyr1', activation=relu)
         y = forward(dh1, params, 'dout', activation=sigmoid).reshape(32, 32).T
-    
+
         plt.subplot(1, 2, 1)
         plt.imshow(valid_x[i].reshape(32, 32).T)
         plt.title('Ground Truth')
         plt.subplot(1, 2, 2)
         plt.imshow(y)
         plt.title('Generated')
-        plt.savefig(f"../out/q5/label-{label}_idx-{i}_loss-{total_loss}.png")
+        plt.savefig(f"../out/q5/label-{label}_idx-{i}_loss-{total_loss}.png", 
+                    bbox_inches='tight', pad_inches=0)
         plt.show()
-    
+
 
 # Q5.3.2
-from skimage.measure import compare_psnr as psnr
 # evaluate PSNR
 ##########################
 ##### your code here #####
@@ -126,7 +140,6 @@ for vx in valid_x:
     eout = forward(eh1, params, 'eout', activation=relu)
     dh1 = forward(eout, params, 'dlyr1', activation=relu)
     y = forward(dh1, params, 'dout', activation=sigmoid)
-    
+
     PSNR += psnr(vx, y)
 print(f"PSNR for the {N} val images is: {PSNR/N}")
-    
