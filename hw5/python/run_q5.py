@@ -71,7 +71,7 @@ for itr in range(max_iters):
         dec_h1 = forward(enc_out, params, 'dlyr1', activation=relu)
         dec_out = forward(dec_h1, params, 'dout', activation=sigmoid)
 
-        total_loss += np.sum((xb - dec_out)**2) / batch_num
+        total_loss += np.sum((xb - dec_out)**2) / (batch_num * batch_size)
 
         delta1 = 2.0 * (dec_out - xb)
         delta2 = backwards(delta1, params, 'dout',
@@ -88,7 +88,7 @@ for itr in range(max_iters):
         
     loss.append(total_loss)
     if itr % 2 == 0:
-        print("itr: {:02d} \t loss: {:.2f}".format(itr, total_loss))
+        print("itr: {:02d}\tloss: {:.2f}".format(itr, total_loss))
     if itr % lr_rate == lr_rate-1:
         learning_rate *= 0.9
 
@@ -99,6 +99,7 @@ plt.plot(epochs, loss)
 plt.title('Autoencoder Loss')
 plt.xlabel('epochs')
 plt.ylabel('loss')
+plt.savefig("../out/q5/autoencoder_loss.png")
 plt.show()
 plt.close()
 # visualize some results
@@ -106,7 +107,7 @@ plt.close()
 ##### your code here #####
 ##########################
 valid_y = valid_data['valid_labels']
-labels = np.random.randint(35, size=(5))
+labels = np.random.choice(35, size=(5), replace=False)
 valid_labels = np.argmax(valid_y, axis=1)
 
 for label in labels:

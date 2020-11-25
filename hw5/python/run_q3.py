@@ -15,8 +15,8 @@ valid_x, valid_y = valid_data['valid_data'], valid_data['valid_labels']
 
 max_iters = 30
 # pick a batch size, learning rate
-batch_size = 54
-learning_rate = 1e-2  # 0.01
+batch_size = 72
+learning_rate = 1e-3  # best: 0.01
 hidden_size = 64
 ##########################
 ##### your code here #####
@@ -39,8 +39,8 @@ initialize_weights(hidden_size, n_cls, params, 'output')
 init_w = copy.deepcopy(params['Wlayer1'])
 
 # with default settings, you should get loss < 150 and accuracy > 80%
-losses = []
-accs = []
+train_losses, train_accs = [], []
+valid_losses, valid_accs = [], []
 for itr in range(max_iters):
     total_loss = 0
     total_acc = 0
@@ -55,7 +55,7 @@ for itr in range(max_iters):
 
         # loss and accuracy
         loss, acc = compute_loss_and_acc(yb, yp)
-        total_loss += loss / batch_num
+        total_loss += loss / (batch_num * len(xb))
         total_acc += acc / batch_num
 
         # backward
@@ -70,12 +70,27 @@ for itr in range(max_iters):
         params['Wlayer1'] -= learning_rate * params['grad_Wlayer1']
         params['blayer1'] -= learning_rate * params['grad_blayer1']
 
-    losses.append(total_loss)
-    accs.append(total_acc)
+    # Compute validation loss and accuracy so far
+    vh1 = forward(valid_x, params, 'layer1', activation=sigmoid)
+    vyp = forward(vh1, params, 'output', activation=softmax)
+    loss, acc = compute_loss_and_acc(valid_y, vyp)
+    loss /= len(valid_x)
+    valid_losses.append(loss)
+    valid_accs.append(acc)
+
+    # Append running loss and accuracy
+    train_losses.append(total_loss)
+    train_accs.append(total_acc)
 
     if itr % 2 == 0:
-        print("itr: {:02d} \t loss: {:.2f} \t acc : {:.2f}"
-              .format(itr, total_loss, total_acc))
+        print("itr {:02d}".format(itr))
+        print("\t train:\t loss: {:.3f}\t acc: {:.3f}"
+              .format(total_loss, total_acc))
+        print("\t valid:\t loss: {:.3f}\t acc: {:.3f}"
+              .format(loss, acc))
+print("itr {:02d}".format(max_iters))
+print("\ttrain:\t loss: {:.3f}\t acc: {:.3f}".format(total_loss, total_acc))
+print("\tvalid:\t loss: {:.3f}\t acc: {:.3f}".format(loss, acc))
 
 # Plot loss and accuracy
 epochs = np.arange(start=0, stop=max_iters, step=1)
@@ -84,15 +99,18 @@ fig, axs = plt.subplots(1, 2, constrained_layout=True)
 fig.suptitle(
     f"iters:{max_iters} - batch-size: {batch_size} - lr: {learning_rate}",
     fontsize=12)
-axs[0].plot(epochs, losses, 'ko-')
+axs[0].plot(epochs, train_losses, 'k.-', label='train loss')
+axs[0].plot(epochs, valid_losses, 'g.-', label='val loss')
 axs[0].set_title('Loss vs Epochs')
 axs[0].set_xlabel('epochs ')
 axs[0].set_ylabel('loss')
 
-axs[1].plot(epochs, accs, 'r.-')
+axs[1].plot(epochs, train_accs, 'k.-', label='train accuracy')
+axs[1].plot(epochs, valid_accs, 'g.-', label='valid accuracy')
 axs[1].set_title('Accuracy vs Epochs')
 axs[1].set_xlabel('epochs')
 axs[1].set_ylabel('accuracy')
+plt.legend(loc='upper left', borderaxespad=0.)
 
 plt.savefig("../out/q3/loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
@@ -105,17 +123,16 @@ plt.show()
 ##########################
 h1 = forward(valid_x, params, 'layer1', activation=sigmoid)
 yp = forward(h1, params, 'output', activation=softmax)
-valid_loss, valid_acc = compute_loss_and_acc(valid_y, yp)
-
-print(f'Validation loss: {valid_loss/len(valid_x)} accuracy: {valid_acc}')
+_, valid_acc = compute_loss_and_acc(valid_y, yp)
+print(f'Validation accuracy: {valid_acc}')
 if False:  # view the data
     for crop in xb:
         import matplotlib.pyplot as plt
         plt.imshow(crop.reshape(32, 32).T)
         plt.show()
 saved_params = {k: v for k, v in params.items() if '_' not in k}
-# with open('q3_weights.pickle', 'wb') as handle:
-#     pickle.dump(saved_params, handle, protocol=pickle.HIGHEST_PROTOCOL)
+with open(f'q3_weights_{loss}.pickle', 'wb') as handle:
+    pickle.dump(saved_params, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Q3.3
 
@@ -141,6 +158,7 @@ plt.draw()
 #             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
 
 plt.show()
+# plt.close()
 
 # Q3.4
 confusion_matrix = np.zeros((train_y.shape[1], train_y.shape[1]))
@@ -163,3 +181,4 @@ plt.yticks(np.arange(36), string.ascii_uppercase[:26] +
 # plt.savefig("../out/q3/confmat_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
 #             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
 plt.show()
+# plt.close()

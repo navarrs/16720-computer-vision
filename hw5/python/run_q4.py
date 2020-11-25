@@ -34,7 +34,7 @@ for img in os.listdir('../images'):
         rect = matplotlib.patches.Rectangle((minc, minr), maxc - minc, maxr - minr,
                                             fill=False, edgecolor='red', linewidth=2)
         plt.gca().add_patch(rect)
-    plt.savefig(f"../out/q4/{img}", bbox_inches='tight', pad_inches=0)
+    # plt.savefig(f"../out/q4/{img}", bbox_inches='tight', pad_inches=0)
     # plt.show()
     plt.close()
     # find the rows using..RANSAC, counting, clustering, etc.
@@ -93,6 +93,6 @@ for img in os.listdir('../images'):
     for i, y in enumerate(y_label):
         if curr_label != labels[i]:
             curr_label = labels[i]
-            print("")
+            print(" ")
         print(f"{letters[y]} ", end='')
     print(f"\n")

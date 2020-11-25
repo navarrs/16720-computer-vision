@@ -6,7 +6,7 @@ import shutil
 
 if len(sys.argv) > 1:
     output_folder = '../data/oxford-flowers17'
-    splits = scipy.io.loadmat('datasplits.mat')
+    splits = scipy.io.loadmat('../data/datasplits.mat')
     maps = [('trn2','train'),('val2','val'),('tst2','test')]
     labels = {'labels': (np.arange(1360,dtype=np.int) )//80 }
     base_str = "image_{:04d}.jpg"
@@ -17,7 +17,7 @@ else:
     maps = [('trn','train'),('val','val'),('tst','test')]
     base_str = "image_{:05d}.jpg"
 
-input_folder = 'jpg'
+input_folder = '../data/17flowers/jpg'
 
 
 img_to_split = {}
