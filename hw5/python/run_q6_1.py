@@ -6,6 +6,10 @@ import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
 import string
+
+import torchvision
+import torchvision.transforms as transforms
+
 #
 # GLOBAL PARAMETERS
 # ------------------------------------------------------------------------------
@@ -67,6 +71,31 @@ class FC(nn.Module):
 
 # For Q6.1.2
 
+class CNN2(nn.Module):
+    def __init__(self, channels=1, n_classes=10):
+        super(CNN2, self).__init__()
+
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(channels, 32, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        # self.drop = nn.Dropout()
+        self.fc1 = nn.Linear(8 * 8 * 64, 1000)
+        self.fc2 = nn.Linear(1000, n_classes)
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = x.view(-1, 64 * 8 * 8)
+        # x = self.drop(x)
+        x = self.fc1(x)
+        return self.fc2(x)
 
 class CNN(nn.Module):
     def __init__(self, channels=1, n_classes=10, p=0.5):
@@ -83,10 +112,10 @@ class CNN(nn.Module):
 
         # self.drop = nn.Dropout(p)
         self.fc = nn.Sequential(
-            nn.Linear(5 * 5 * 16, 120),
+            nn.Linear(5 * 5 * 16, 1000),
             nn.Linear(120, 84),
             nn.Linear(84, n_classes)
-        ) 
+        )
 
     def forward(self, x):
         x = self.convs(x)
@@ -115,9 +144,9 @@ def plot(losses, accs, n_epochs, lr_rate, batch_size, net_type=''):
     axs[1].set_ylabel('accuracy')
     axs[1].legend(loc='upper left', borderaxespad=0.)
 
-    plt.savefig("../out/q6/{}_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
-                .format(net_type, losses["val"][-1], accs["val"][-1], 
-                        n_epochs, lr_rate, batch_size))
+    plt.savefig("../out/q6/{}_batch-{}_iter-{}_lr-{}_loss-{:.3f}_acc-{:.3f}.png"
+                .format(net_type, batch_size, n_epochs, lr_rate, 
+                        losses["val"][-1], accs["val"][-1]))
 
     # plt.show()
     plt.close()
@@ -125,6 +154,8 @@ def plot(losses, accs, n_epochs, lr_rate, batch_size, net_type=''):
 #
 # Q6.1.1 Fully connected network
 # ------------------------------------------------------------------------------
+
+
 def q6_1_1(n_epochs=30, lr_rate=1e-3, batch_size=54):
 
     # Load dataset
@@ -133,7 +164,7 @@ def q6_1_1(n_epochs=30, lr_rate=1e-3, batch_size=54):
 
     data_loaders = {
         "train": torch.utils.data.DataLoader(
-            train_dataset, batch_size=batch_size, shuffle=True), 
+            train_dataset, batch_size=batch_size, shuffle=True),
         "train_size": len(train_dataset),
         "val": torch.utils.data.DataLoader(
             val_dataset, batch_size=1, shuffle=False),
@@ -145,33 +176,33 @@ def q6_1_1(n_epochs=30, lr_rate=1e-3, batch_size=54):
 
     losses = {"train": [], "val": []}
     accs = {"train": [], "val": []}
-    
+
     for epoch in range(n_epochs):
         print(f"Epoch {epoch + 1}/{n_epochs}")
         for phase in ["train", "val"]:
             running_loss, running_acc = 0.0, 0.0
-            
+
             for i, data in enumerate(data_loaders[phase], 0):
                 X, y = data
                 optimizer.zero_grad()
-                
+
                 with torch.set_grad_enabled(phase == "train"):
                     y_p = net(X)
                     _, pred = torch.max(y_p.data, 1)
                     loss = criterion(y_p, y)
-                    
+
                     if phase == "train":
                         loss.backward()
                         optimizer.step()
-                
+
                 running_loss += loss.item() * X.size(0)
-                running_acc  += (pred == y.data).sum()
+                running_acc += (pred == y.data).sum()
 
             N = data_loaders[phase + "_size"]
             losses[phase].append(running_loss / N)
             accs[phase].append(running_acc / N)
             print("\t{}:\t loss: {:.3f}\t acc: {:.3f}"
-              .format(phase, losses[phase][epoch], accs[phase][epoch]))
+                  .format(phase, losses[phase][epoch], accs[phase][epoch]))
 
     # Plot loss and accuracy
     plot(losses, accs, n_epochs, lr_rate, batch_size, net_type='fcn_nist')
@@ -179,70 +210,115 @@ def q6_1_1(n_epochs=30, lr_rate=1e-3, batch_size=54):
 #
 # Q6.1.2 - Q6.1.3 - CNN
 # ------------------------------------------------------------------------------
+
+
 def q6_1_2(net, data_loaders, dataset, batch_size=72, n_epochs=10, lr_rate=1e-3):
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     net.to(device)
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(net.parameters(), lr=lr_rate)
+
+    losses = {"train": [], "val": []}
+    accs = {"train": [], "val": []}
+
+    for epoch in range(n_epochs):
+        print(f"Epoch {epoch + 1}/{n_epochs}")
+        for phase in ["train", "val"]:
+            running_loss, running_acc = 0.0, 0.0
+
+            if phase == "train":
+                net.train()
+            else:
+                net.eval()
+
+            for i, data in enumerate(data_loaders[phase], 0):
+                X, y = data[0].to(device), data[1].to(device)
+                optimizer.zero_grad()
+
+                with torch.set_grad_enabled(phase == "train"):
+                    y_p = net(X)
+                    _, pred = torch.max(y_p.data, 1)
+                    loss = criterion(y_p, y)
+
+                    if phase == "train":
+                        loss.backward()
+                        optimizer.step()
+
+                running_loss += loss * X.size(0)
+                running_acc += (pred == y.data).sum()
+
+            N = data_loaders[phase + "_size"]
+            losses[phase].append(running_loss / N)
+            accs[phase].append(running_acc / N)
+            print("\t{}:\t loss: {:.3f}\t acc: {:.3f}"
+                  .format(phase, losses[phase][epoch], accs[phase][epoch]))
+
+    # Plot loss and accuracy
+    plot(losses, accs, n_epochs, lr_rate,
+         batch_size, net_type=f"cnn_{dataset}")
+
+#
+# Q6.1.4 - CNN
+# ------------------------------------------------------------------------------
+
+def q6_1_4(net, data_loaders, dataset, batch_size=72, n_epochs=10, lr_rate=1e-3):
     
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters(), lr=lr_rate)
 
     losses = {"train": [], "val": []}
     accs = {"train": [], "val": []}
-    
+
     for epoch in range(n_epochs):
         print(f"Epoch {epoch + 1}/{n_epochs}")
         for phase in ["train", "val"]:
             running_loss, running_acc = 0.0, 0.0
-            
-            if phase == "train":
-                net.train()
-            else:
-                net.eval()
-            
+
             for i, data in enumerate(data_loaders[phase], 0):
-                X, y = data[0].to(device), data[1].to(device)
+                X, y = data
                 optimizer.zero_grad()
-                
+
                 with torch.set_grad_enabled(phase == "train"):
-                    y_p = net(X)
-                    _, pred = torch.max(y_p.data, 1)
+                    y_hat, y_p = net(X)
+
                     loss = criterion(y_p, y)
-                    
+                    _, pred = torch.max(y_p.data, 1)
+
                     if phase == "train":
                         loss.backward()
                         optimizer.step()
-                
-                running_loss += loss * X.size(0)
-                running_acc  += (pred == y.data).sum()
+
+                running_loss += loss.item() * X.size(0)
+                running_acc += (pred == y.data).sum()
 
             N = data_loaders[phase + "_size"]
             losses[phase].append(running_loss / N)
             accs[phase].append(running_acc / N)
             print("\t{}:\t loss: {:.3f}\t acc: {:.3f}"
-              .format(phase, losses[phase][epoch], accs[phase][epoch]))
+                  .format(phase, losses[phase][epoch], accs[phase][epoch]))
 
     # Plot loss and accuracy
-    plot(losses, accs, n_epochs, lr_rate, batch_size, net_type=f"cnn_{dataset}")
-
-
-if __name__ == "__main__":
+    plot(losses, accs, n_epochs, lr_rate, batch_size, net_type=f'cnn_{dataset}')
     
+if __name__ == "__main__":
+
     # --------------------------------------------------------------------------
     # Q6.1.1 - FC
-    
+
     # q6_1_1()
-    
+
     # --------------------------------------------------------------------------
     # Q6.1.2 - CNN - NIST
-    
+
     # train_dataset = Dataset2(train_x, train_y)
     # val_dataset = Dataset2(valid_x, valid_y)
-    # batch_size = 108    
+    # batch_size = 108
     # data_loaders = {
     #     "train": torch.utils.data.DataLoader(
-    #         train_dataset, batch_size=batch_size, shuffle=True), 
+    #         train_dataset, batch_size=batch_size, shuffle=True),
     #     "train_size": len(train_dataset),
     #     "val": torch.utils.data.DataLoader(
     #         val_dataset, batch_size=1, shuffle=False),
@@ -253,48 +329,83 @@ if __name__ == "__main__":
 
     # --------------------------------------------------------------------------
     # Q6.1.3 - CNN - CIFAR
-    
-    # import torchvision
-    # import torchvision.transforms as transforms
-    
+
     # batch_sizes = [108] #, 72, 54, 32, 16]
     # lr_rates = [1e-3]#, 3e-2]
     # n_epochs = [10]#, 15, 30]
-    
+
     # trans = transforms.Compose([
-    #     transforms.ToTensor(), 
+    #     transforms.ToTensor(),
     #     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     # ])
     # train_dataset = torchvision.datasets.CIFAR10(
     #     root="../data", train=True, transform=trans, download=True)
     # val_dataset = torchvision.datasets.CIFAR10(
     #     root="../data", train=False, transform=trans, download=True)
-        
+
     # for lr_rate in lr_rates:
     #     for epochs in n_epochs:
     #         for batch_size in batch_sizes:
     #             print(f"Config: lr: {lr_rate} batch size: {batch_size} epochs: {epochs}")
     #             data_loaders = {
     #                 "train": torch.utils.data.DataLoader(
-    #                     train_dataset, batch_size=batch_size, 
-    #                     shuffle=True, num_workers=4, pin_memory=True), 
+    #                     train_dataset, batch_size=batch_size,
+    #                     shuffle=True, num_workers=4, pin_memory=True),
     #                 "train_size": len(train_dataset),
     #                 "val": torch.utils.data.DataLoader(
-    #                     val_dataset, batch_size=1, 
+    #                     val_dataset, batch_size=1,
     #                     shuffle=False, num_workers=4, pin_memory=True),
     #                 "val_size": len(val_dataset)
     #             }
     #             net = CNN(channels=3, n_classes=10)
     #             q6_1_2(net, data_loaders, 'cifar', batch_size, epochs, lr_rate)
-    
+
     # --------------------------------------------------------------------------
-    # Q6.1.3 - CNN - LSUN
+    # Q6.1.4 - CNN - LSUN
     
-    # trans = transforms.Compose([
-    #   transforms.Resize(128),
-    #   transforms.CenterCrop(128),
-    #   transforms.ToTensor()
-    # ])
+    batch_sizes = [50, 32, 74]
+    lr_rates = [1e-3]# 1e-3, 1e-2]
+    n_classes = 10
+    n_epochs = [15] #, 10]#, 20]
+
+    IMAGENET_MEAN = [0.485, 0.456, 0.406]
+    IMAGENET_STD = [0.229, 0.224, 0.225]
+
+    trans = transforms.Compose([
+        transforms.ColorJitter(hue=.05, saturation=.05),
+        transforms.RandomHorizontalFlip(),
+        # transforms.RandomRotation(20),
+        # transforms.Resize(256),
+        # transforms.CenterCrop(224),
+        transforms.Resize((32, 32)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+    ])
     
-    # train_dataset = torchvision.datasets.LSUN(
-    #   root="../data", classes='train', transform=trans)
+    dataset = torchvision.datasets.ImageFolder(
+        root="../data/sun", transform=trans)
+    N = len(dataset)
+    val_split = int(0.20 * N)
+    train_dataset, val_dataset = torch.utils.data.random_split(
+        dataset, [N - val_split, val_split])
+    print(f"train: {len(train_dataset)} val: {len(val_dataset)}")
+
+    for epochs in n_epochs:
+        for lr in lr_rates:
+            for batch_size in batch_sizes:
+                print(f"Config: lr: {lr} batch size: {batch_size} epochs: {epochs}")
+                data_loaders = {
+                    "train": torch.utils.data.DataLoader(
+                        train_dataset, batch_size=batch_size,
+                        shuffle=True, num_workers=4, pin_memory=True),
+                    "train_size": len(train_dataset),
+                    "val": torch.utils.data.DataLoader(
+                        val_dataset, batch_size=1,
+                        shuffle=False, num_workers=4, pin_memory=True),
+                    "val_size": len(val_dataset)
+                }
+                net = CNN2(channels=3, n_classes=n_classes)
+                q6_1_2(net, data_loaders, 'sun', batch_size, epochs, lr)
+                
+                # net = torchvision.models.alexnet()
+                # q6_1_2(net, data_loaders, 'sun', batch_size, epochs, lr)
