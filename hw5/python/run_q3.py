@@ -112,10 +112,11 @@ axs[1].set_xlabel('epochs')
 axs[1].set_ylabel('accuracy')
 plt.legend(loc='upper left', borderaxespad=0.)
 
-plt.savefig("../out/q3/loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
-            .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
+# plt.savefig("../out/q3/loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
+#             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
 
 plt.show()
+plt.close()
 
 # run on validation set and report accuracy! should be above 75%
 ##########################
@@ -131,7 +132,9 @@ if False:  # view the data
         plt.imshow(crop.reshape(32, 32).T)
         plt.show()
 saved_params = {k: v for k, v in params.items() if '_' not in k}
-with open(f'q3_weights_{loss}.pickle', 'wb') as handle:
+# with open(f'q3_weights_{loss}.pickle', 'wb') as handle:
+#     pickle.dump(saved_params, handle, protocol=pickle.HIGHEST_PROTOCOL)
+with open('q3_weights.pickle', 'wb') as handle:
     pickle.dump(saved_params, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Q3.3
@@ -158,7 +161,7 @@ plt.draw()
 #             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
 
 plt.show()
-# plt.close()
+plt.close()
 
 # Q3.4
 confusion_matrix = np.zeros((train_y.shape[1], train_y.shape[1]))
@@ -181,4 +184,4 @@ plt.yticks(np.arange(36), string.ascii_uppercase[:26] +
 # plt.savefig("../out/q3/confmat_loss-{:.3f}_acc-{:.3f}_iter-{}_lr-{}_batch-{}.png"
 #             .format(total_loss, total_acc, max_iters, learning_rate, batch_size))
 plt.show()
-# plt.close()
+plt.close()

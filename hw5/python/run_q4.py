@@ -35,7 +35,7 @@ for img in os.listdir('../images'):
                                             fill=False, edgecolor='red', linewidth=2)
         plt.gca().add_patch(rect)
     # plt.savefig(f"../out/q4/{img}", bbox_inches='tight', pad_inches=0)
-    # plt.show()
+    plt.show()
     plt.close()
     # find the rows using..RANSAC, counting, clustering, etc.
     ##########################

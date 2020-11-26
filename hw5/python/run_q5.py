@@ -99,7 +99,7 @@ plt.plot(epochs, loss)
 plt.title('Autoencoder Loss')
 plt.xlabel('epochs')
 plt.ylabel('loss')
-plt.savefig("../out/q5/autoencoder_loss.png")
+# plt.savefig("../out/q5/autoencoder_loss.png")
 plt.show()
 plt.close()
 # visualize some results
@@ -124,9 +124,10 @@ for label in labels:
         plt.subplot(1, 2, 2)
         plt.imshow(y)
         plt.title('Generated')
-        plt.savefig(f"../out/q5/label-{label}_idx-{i}_loss-{total_loss}.png", 
-                    bbox_inches='tight', pad_inches=0)
+        # plt.savefig(f"../out/q5/label-{label}_idx-{i}_loss-{total_loss}.png", 
+        #             bbox_inches='tight', pad_inches=0)
         plt.show()
+        plt.close()
 
 
 # Q5.3.2

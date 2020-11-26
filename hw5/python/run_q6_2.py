@@ -80,11 +80,11 @@ def plot(losses, accs, n_epochs, lr_rate, batch_size, net_type=''):
     axs[1].set_ylabel('accuracy')
     axs[1].legend(loc='upper left', borderaxespad=0.)
 
-    plt.savefig("../out/q6_2/{}_iter-{}_lr-{}_batch-{}_loss-{:.3f}_acc-{:.3f}.png"
-                .format(net_type, n_epochs, lr_rate, batch_size, 
-                        losses["val"][-1], accs["val"][-1]))
+    # plt.savefig("../out/q6_2/{}_iter-{}_lr-{}_batch-{}_loss-{:.3f}_acc-{:.3f}.png"
+    #             .format(net_type, n_epochs, lr_rate, batch_size, 
+    #                     losses["val"][-1], accs["val"][-1]))
 
-    # plt.show()
+    plt.show()
     plt.close()
 
 #
@@ -181,20 +181,31 @@ def train_from_scratch(net, data_loaders, dataset, batch_size, epochs, lr):
  
 if __name__ == "__main__":
     
+    train_finetune = True
+    
     # --------------------------------------------------------------------------
     # Q6.2 -- Train from scratch
     batch_sizes = [16] #, 32, 64]
     lr_rates = [1e-3]#, 1e-4]#, 1e-2, 1e-5]
     n_epochs = [10]
 
-    data_transform = transforms.Compose([
-        transforms.ColorJitter(hue=.05, saturation=.05),
-        transforms.RandomHorizontalFlip(),
-        transforms.Resize(256),
-        transforms.RandomSizedCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-    ])
+    if train_finetune:
+        data_transform = transforms.Compose([
+            transforms.ColorJitter(hue=.05, saturation=.05),
+            transforms.RandomHorizontalFlip(),
+            transforms.Resize(256),
+            transforms.RandomSizedCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+        ])
+    else:
+        data_transform = transforms.Compose([
+            transforms.ColorJitter(hue=.05, saturation=.05),
+            transforms.RandomHorizontalFlip(),
+            transforms.Resize((32, 32)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+        ])
     
     train_dataset = datasets.ImageFolder(
         root="../data/oxford-flowers17/train", transform=data_transform)
@@ -218,8 +229,14 @@ if __name__ == "__main__":
                         test_dataset, batch_size=1, shuffle=False),
                     "test_size": len(test_dataset)
                 }
-                finetune(data_loaders, 'flowers17', batch_size, epochs, lr)
                 
-                # net = LeNet(channels=3, n_classes=N_CLASSES)
-                # train_from_scratch(
-                #     net, data_loaders, 'flowers17', batch_size, epochs, lr)
+                if train_finetune:
+                    # ----------------------------------------------------------
+                    # SqueezeNet - finteuned 
+                    finetune(data_loaders, 'flowers17', batch_size, epochs, lr)
+                else:
+                    # ----------------------------------------------------------
+                    # LeNet - trained from scratch
+                    net = LeNet(channels=3, n_classes=N_CLASSES)
+                    train_from_scratch(
+                        net, data_loaders, 'flowers17', batch_size, epochs, lr)
