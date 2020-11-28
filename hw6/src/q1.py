@@ -17,7 +17,6 @@ from matplotlib import cm
 from utils import integrateFrankot
 
 def renderNDotLSphere(center, rad, light, pxSize, res):
-
     """
     Question 1 (b)
 
@@ -59,15 +58,15 @@ def renderNDotLSphere(center, rad, light, pxSize, res):
         for j in range(image.shape[1]):
             if image_bools[i, j]:
                 # pixel to meter
-                x = i * pxSize
-                y = j * pxSize
+                y = i * pxSize
+                x = j * pxSize
                 # compute depth value
                 z = np.sqrt(abs(rad**2 - x**2 - y**2))
                 # compute normal at x, y, z
                 n = np.array([x, y, z]) 
                 n = n / np.linalg.norm(n)
                 # compute shading
-                image[i, j] = np.dot(n, light)
+                image[i, j] = max(0, np.dot(n, light))
     
     plt.imshow(image, origin='lower')
     plt.savefig('../out/q1/sphere-light-{:.2f}_{:.2f}_{:.2f}.png'
@@ -109,15 +108,15 @@ def loadData(path = "../data/"):
             "Image data type is {image.dtype} and shoud be np.uint16"
         image = rgb2xyz(image)[:, :, 1]
         s = image.shape
-        I.append(image.reshape((-1,)))
+        I.append(image.flatten())
     
     I = np.asarray(I)
+    # print(I.dtype)
     L = np.load(os.path.join(path, "sources.npy")).T
     return I, L, s
 
 
 def estimatePseudonormalsCalibrated(I, L):
-
     """
     Question 1 (e)
 
@@ -162,11 +161,11 @@ def estimateAlbedosNormals(B):
     '''
     albedos = np.linalg.norm(B, axis=0)
     normals = B / albedos
+    # normals[-1, :] = normals[-1, :]
     return albedos, normals
 
 
 def displayAlbedosNormals(albedos, normals, s):
-
     """
     Question 1 (f)
 
@@ -195,22 +194,20 @@ def displayAlbedosNormals(albedos, normals, s):
         Normals reshaped as an s x 3 image
 
     """
-
     albedoIm = albedos.reshape(s)
     normalIm = normals.T.reshape(s[0], s[1], 3)
-
+    
     plt.imshow(albedoIm, cmap='gray')
-    plt.savefig("../out/q1/albedo.png")
+    # plt.savefig("../out/q2/albedo.png")
     
     plt.imshow(normalIm, cmap='rainbow')
-    plt.savefig("../out/q1/normal.png")
+    # plt.savefig("../out/q2/normal.png")
     # plt.show()
 
     return albedoIm, normalIm
 
 
 def estimateShape(normals, s):
-
     """
     Question 1 (i)
 
@@ -229,15 +226,19 @@ def estimateShape(normals, s):
     ----------
     surface: numpy.ndarray
         The image, of size s, of estimated depths at each point
-
     """
-
-    surface = None
+    xz = np.zeros(s)
+    yz = np.zeros(s)
+    normals = normals.T.reshape(s[0], s[1], 3)
+    for i in range(s[0]):
+        for j in range(s[1]):
+            xz[i, j] = - normals[i,j, 0] / normals[i,j, 2]
+            yz[i, j] = - normals[i,j, 1] / normals[i,j, 2]
+    surface = integrateFrankot(xz, yz)
     return surface
 
 
 def plotSurface(surface):
-
     """
     Question 1 (i) 
 
@@ -253,16 +254,26 @@ def plotSurface(surface):
         None
 
     """
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    X = np.arange(0, surface.shape[1], 1)
+    Y = np.arange(0, surface.shape[0], 1)
+    X, Y = np.meshgrid(X, Y)
+    # print(X.shape, Y.shape)
 
-    pass
+    # Plot the surface.
+    surf = ax.plot_surface(X, Y, surface, cmap=cm.coolwarm,
+                        linewidth=0, antialiased=False)
+    plt.show()
+    
 
 
 if __name__ == '__main__':
 
     
-    # --------------------------------------------------------------------------
-    # Q1.B
-    # --------------------------------------------------------------------------
+    # # --------------------------------------------------------------------------
+    # # Q1.B
+    # # --------------------------------------------------------------------------
     # center = np.array([0, 0, 10])
     # rad = 0.75
     # light = np.array([[1, 1, 1], [1, -1, 1], [-1, -1, 1]]) / np.sqrt(3)
@@ -296,3 +307,9 @@ if __name__ == '__main__':
     albedos, normals = estimateAlbedosNormals(B)
     displayAlbedosNormals(albedos, normals, s)
     print(f"Q1F -- albedos: {albedos.shape} normals: {normals.shape}")
+    
+    # --------------------------------------------------------------------------
+    # Q1.H
+    # --------------------------------------------------------------------------
+    surface = estimateShape(normals, s)
+    plotSurface(surface)
