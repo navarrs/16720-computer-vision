@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-
+from scipy.sparse import linalg
 from utils import integrateFrankot
 
 def renderNDotLSphere(center, rad, light, pxSize, res):
@@ -67,11 +67,14 @@ def renderNDotLSphere(center, rad, light, pxSize, res):
                 n = n / np.linalg.norm(n)
                 # compute shading
                 image[i, j] = max(0, np.dot(n, light))
+            else:
+                image[i, j] = 0.3 # an arbitrary background value
     
     plt.imshow(image, origin='lower')
-    plt.savefig('../out/q1/sphere-light-{:.2f}_{:.2f}_{:.2f}.png'
-                .format(light[0], light[1], light[2]))
-    # plt.show()
+    # plt.savefig('../out/q1/sphere-light-{:.2f}_{:.2f}_{:.2f}.png'
+    #             .format(light[0], light[1], light[2]), 
+    #             bbox_inches='tight', pad_inches=0)
+    plt.show()
     plt.close()
     return image
 
@@ -104,15 +107,18 @@ def loadData(path = "../data/"):
     I = []
     for i in range(7):
         image = imread(os.path.join(path, f'input_{i+1}.tif'))
-        assert image.dtype == np.uint16, \
-            "Image data type is {image.dtype} and shoud be np.uint16"
-        image = rgb2xyz(image)[:, :, 1]
+        if image.dtype != np.uint16:
+            image = image.astype(np.uint16)
+            
+        # Luminance channel is Y
+        image = rgb2xyz(image)[:, :, 1] 
         s = image.shape
         I.append(image.flatten())
     
     I = np.asarray(I)
     # print(I.dtype)
     L = np.load(os.path.join(path, "sources.npy")).T
+    # print(I.shape, L.shape)
     return I, L, s
 
 
@@ -136,7 +142,15 @@ def estimatePseudonormalsCalibrated(I, L):
     B : numpy.ndarray
         The 3 x P matrix of pesudonormals
     """
-    B = np.linalg.inv(L @ L.T) @ L @ I
+    A = L.T
+    
+    B = np.zeros((3, I.shape[1]))
+    for i in range(I.shape[1]):
+        y = I[:, i]
+        B[:, i] = np.linalg.lstsq(A, y, rcond=None)[0]
+    
+    # print(f"y: {y.shape} {A.shape} {L.shape}")
+    # B = np.linalg.inv(L @ L.T) @ L @ I
     return B
 
 
@@ -161,7 +175,7 @@ def estimateAlbedosNormals(B):
     '''
     albedos = np.linalg.norm(B, axis=0)
     normals = B / albedos
-    # normals[-1, :] = normals[-1, :]
+    normals[-1, :] = -normals[-1, :]
     return albedos, normals
 
 
@@ -198,11 +212,14 @@ def displayAlbedosNormals(albedos, normals, s):
     normalIm = normals.T.reshape(s[0], s[1], 3)
     
     plt.imshow(albedoIm, cmap='gray')
-    # plt.savefig("../out/q2/albedo.png")
+    # plt.savefig("../out/q2/albedo.png", bbox_inches='tight', pad_inches=0)
+    plt.show()
+    plt.close()
     
     plt.imshow(normalIm, cmap='rainbow')
-    # plt.savefig("../out/q2/normal.png")
-    # plt.show()
+    # plt.savefig("../out/q2/normal.png", bbox_inches='tight', pad_inches=0)
+    plt.show()
+    plt.close()
 
     return albedoIm, normalIm
 
@@ -262,6 +279,9 @@ def plotSurface(surface):
     # print(X.shape, Y.shape)
 
     # Plot the surface.
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
     surf = ax.plot_surface(X, Y, surface, cmap=cm.coolwarm,
                         linewidth=0, antialiased=False)
     plt.show()
@@ -271,17 +291,18 @@ def plotSurface(surface):
 if __name__ == '__main__':
 
     
-    # # --------------------------------------------------------------------------
-    # # Q1.B
-    # # --------------------------------------------------------------------------
-    # center = np.array([0, 0, 10])
-    # rad = 0.75
-    # light = np.array([[1, 1, 1], [1, -1, 1], [-1, -1, 1]]) / np.sqrt(3)
-    # pxSize = 7e-6
-    # # res = [100, 100]
-    # res = [3840, 2160]
-    # for i in range(len(light)):
-    #     renderNDotLSphere(center, rad, light[i], pxSize, res)
+    # --------------------------------------------------------------------------
+    # Q1.B
+    # --------------------------------------------------------------------------
+    print(f"Q1B", "-"*50)
+    center = np.array([0, 0, 10])
+    rad = 0.75
+    light = np.array([[1, 1, 1], [1, -1, 1], [-1, -1, 1]]) / np.sqrt(3)
+    pxSize = 7e-6
+    # res = [100, 100]
+    res = [3840, 2160]
+    for i in range(len(light)):
+        renderNDotLSphere(center, rad, light[i], pxSize, res)
     
     # --------------------------------------------------------------------------
     # Q1.C
@@ -293,7 +314,9 @@ if __name__ == '__main__':
     # Q1.D
     # --------------------------------------------------------------------------
     _, S, _ = np.linalg.svd(I, full_matrices=False)
-    print(f"Q1D -- Singular values: {S}")
+    print(f"Q1D Numpy -- Singular values: {S}")
+    # _, S, _ = linalg.svds(I)
+    # print(f"Q1D Scipy -- Singular values: {S}")
     
     # --------------------------------------------------------------------------
     # Q1.E
