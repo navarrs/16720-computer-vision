@@ -142,8 +142,7 @@ def estimatePseudonormalsCalibrated(I, L):
     B : numpy.ndarray
         The 3 x P matrix of pesudonormals
     """
-    A = L.T
-    
+    A = L.T    
     B = np.zeros((3, I.shape[1]))
     for i in range(I.shape[1]):
         y = I[:, i]
